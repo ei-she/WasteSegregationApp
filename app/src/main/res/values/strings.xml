@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Wise Waste</string>
+    <string name="logo_desc">App logo</string>
+    <string name="settings_desc">Settings icon</string>
+    <string name="total_bins">Total Bins Nearby</string>
+    <string name="bin_count">4</string>
+    <string name="bins_status">Bins Status</string>
+    <string name="pie_chart_desc">Pie chart showing bin status</string>
+    <string name="biodegradable">Biodegradable</string>
+    <string name="bio_desc">Biodegradable waste icon</string>
+    <string name="metal">Metal</string>
+    <string name="metal_desc">Metal waste icon</string>
+    <string name="plastic">Plastic</string>
+    <string name="plastic_desc">Plastic waste icon</string>
+    <string name="plastic_bottle">Plastic Bottles</string>
+    <string name="plasticbottle_desc">Plastic bottle waste icon</string>
+    <string name="live_monitoring">Live Bin Monitoring</string>
+    <string name="bin_01">Bin 01</string>
+    <string name="bin_02">Bin 02</string>
+    <string name="bin_03">Bin 03</string>
+    <string name="bin_04">Bin 04</string>
+    <string name="bin_alert_desc">Alert icon when bin is full</string>
+</resources>
