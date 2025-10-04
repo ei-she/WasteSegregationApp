@@ -1,18 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item
-        android:id="@+id/nav_home"
+        android:id="@+id/navigation_dashboard"
         android:icon="@drawable/dashboard"
-        android:title="Home" />
+        android:title="Dashboard" />
 
     <item
-        android:id="@+id/nav_bins"
+        android:id="@+id/navigation_bins"
         android:icon="@drawable/bins"
         android:title="Bins" />
 
     <item
-        android:id="@+id/nav_reports"
+        android:id="@+id/navigation_reports"
         android:icon="@drawable/reports"
         android:title="Reports" />
 
