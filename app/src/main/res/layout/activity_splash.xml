@@ -5,13 +5,16 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Splash">
+    android:background="@color/GREEN"
+    tools:context=".SplashActivity">
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="181dp"
         android:layout_height="226dp"
-        app:srcCompat="@drawable/logo"
+        android:contentDescription="@string/todo"
+        app:srcCompat="@drawable/segregation"
+
         app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,8 +25,10 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Wise Waste Management"
+        android:layout_marginTop="1dp"
+        android:text="Wise Waste"
+        android:textSize="25sp"
+        android:textColor="@android:color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

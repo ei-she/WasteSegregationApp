@@ -20,4 +20,19 @@
     <string name="bin_03">Bin 03</string>
     <string name="bin_04">Bin 04</string>
     <string name="bin_alert_desc">Alert icon when bin is full</string>
+    <string name="waste_reports">Waste Reports</string>
+    <string name="waste_collected_year_of_2025">Waste Collected Year of 2025</string>
+    <string name="total_bins_online">Total Bins Online</string>
+    <string name="analytic_report">Analytic Report</string>
+    <string name="plastic_name">Plastic</string>
+    <string name="plastic__name">Plastic</string>
+    <string name="alert">Alert</string>
+    <string name="metal_name">Metal</string>
+    <string name="metal1">Metal</string>
+    <string name="biodegradable1">Biodegradable</string>
+    <string name="biodegradable2">Biodegradable</string>
+    <string name="alert1">Alert</string>
+    <string name="plastic_bottle1">Plastic Bottle</string>
+    <string name="plastic_bottle2">Plastic Bottle</string>
+    <string name="todo">TODO</string>
 </resources>

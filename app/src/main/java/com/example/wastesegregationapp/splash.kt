@@ -3,29 +3,29 @@ package com.example.wastesegregationapp
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import androidx.activity.enableEdgeToEdge
+import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
-class Splash : AppCompatActivity() {
+class SplashActivity : AppCompatActivity() {
 
-    val handler = Handler()
+    // Define the duration for the splash screen
+    private val SPLASH_DELAY_MS = 3000L // 3 seconds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_splash)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
-        handler.postDelayed({
-            val intent = Intent(this, MainActivity::class.java)
+        // This line MUST execute quickly to display the screen.
+        setContentView(R.layout.activity_splash)
+
+        // Use a Handler to wait for 3 seconds, then launch the main activity.
+        Handler(Looper.getMainLooper()).postDelayed({
+            // Launch the main activity after the delay
+            val intent = Intent(this@SplashActivity, MainActivity::class.java)
             startActivity(intent)
+
+            // Finish the splash activity so the user can't return to it
             finish()
-        }, 3000)
+        }, SPLASH_DELAY_MS)
     }
+    // All animation and TextView code is removed for maximum simplicity.
 }

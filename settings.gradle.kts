@@ -1,3 +1,5 @@
+// settings.gradle.kts - CORRECTED
+
 pluginManagement {
     repositories {
         google {
@@ -16,6 +18,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+
+        // 🚨 USE THE FUNCTION CALL SYNTAX 🚨
+        maven { setUrl("https://jitpack.io") }
     }
 }
 
