@@ -11,7 +11,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
         if (savedInstanceState == null) {
             replaceFragment(HomeFragment())
@@ -20,15 +20,15 @@ class MainActivity : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
 
-                R.id.nav_home -> {
+                R.id.navigation_dashboard -> {
                     replaceFragment(HomeFragment())
                     true
                 }
-                R.id.nav_bins -> {
+                R.id.navigation_bins -> {
                     replaceFragment(BinsFragment())
                     true
                 }
-                R.id.nav_reports -> {
+                R.id.navigation_reports -> {
                     replaceFragment(ReportsFragment())
                     true
                 }
