@@ -25,32 +25,43 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/logo"
-            android:contentDescription="@string/logo_desc" />
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/logo"
+                android:contentDescription="@string/logo_desc" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/black"
-            android:text="@string/app_name"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:layout_marginStart="8dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:text="@string/app_name"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:layout_marginStart="8dp" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@android:drawable/ic_menu_manage"
-            android:contentDescription="@string/settings_desc" />
-    </LinearLayout>
+            <Button
+                android:id="@+id/buttonLogout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Logout"
+                android:layout_marginEnd="8dp"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="14sp"
+                tools:ignore="RelativeOverlap" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/notification"
+                android:contentDescription="@string/settings_desc" />
+        </LinearLayout>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardTotalBins"
@@ -128,7 +139,7 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
-            android:id="@+id/cardWasteType"
+            android:id="@+id/warningprompt"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
@@ -138,6 +149,23 @@
             app:layout_constraintTop_toBottomOf="@id/cardAnalytics"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/warningPrompt"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:padding="12dp"
+                android:background="@drawable/ic_bell_notification"
+                android:text="@string/warning_bin_full"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textSize="14sp"
+                android:visibility="gone" app:layout_constraintTop_toBottomOf="@id/warningPrompt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
@@ -153,7 +181,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardWasteType">
+            app:layout_constraintTop_toBottomOf="@id/warningprompt">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -343,6 +371,7 @@
             app:layout_constraintTop_toBottomOf="@id/cardBinMonitoring"
             android:gravity="center"
             android:elevation="2dp" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

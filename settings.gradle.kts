@@ -2,13 +2,20 @@
 
 pluginManagement {
     repositories {
-        google {
+        // 1. Ensure Google repository is explicitly listed for plugins
+        google()
+
+        // This 'content' block is often used to restrict searches,
+        // but 'google()' above ensures the right place is searched.
+        /* google {
             content {
                 includeGroupByRegex("com\\.android.*")
                 includeGroupByRegex("com\\.google.*")
                 includeGroupByRegex("androidx.*")
             }
         }
+        */
+
         mavenCentral()
         gradlePluginPortal()
     }
@@ -16,10 +23,11 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        // 2. Ensure Google repository is listed for dependencies
         google()
         mavenCentral()
 
-        // 🚨 USE THE FUNCTION CALL SYNTAX 🚨
+        // Use the function call syntax for custom repos
         maven { setUrl("https://jitpack.io") }
     }
 }

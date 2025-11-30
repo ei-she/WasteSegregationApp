@@ -35,4 +35,13 @@
     <string name="plastic_bottle1">Plastic Bottle</string>
     <string name="plastic_bottle2">Plastic Bottle</string>
     <string name="todo">TODO</string>
+    <string name="warning_bin_full">A bin is nearly full! Check Live Monitoring below.</string>
+    <string name="notification_bell_desc">Notifications</string>
+    <string name="app_name_management">Wise Waste\nManagement</string>
+    <string name="login_header">Login</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="login_button">Login</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="create_account_button">Create account</string>
 </resources>

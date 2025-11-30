@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -35,8 +36,7 @@ android {
     }
 }
 
-dependencies { // <--- This is the correct start of the dependencies block
-
+dependencies {
     // Your existing dependencies
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
@@ -52,5 +52,10 @@ dependencies { // <--- This is the correct start of the dependencies block
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // 🔑 Firebase Dependencies (You already had these, which is correct)
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx:LATEST_VERSION")
 }
-// <--- This is the correct end of the dependencies block

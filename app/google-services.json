@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522463821098",
+    "project_id": "wise-wastee",
+    "storage_bucket": "wise-wastee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522463821098:android:4b5afd4ff2bfa0c5ef3253",
+        "android_client_info": {
+          "package_name": "com.example.wastesegregationapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFCwSP6ElZ2GFIeSs-JB83K2VX_VBo-Cs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

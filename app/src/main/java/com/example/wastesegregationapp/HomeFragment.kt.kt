@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.Legend
@@ -32,7 +33,7 @@ class HomeFragment : Fragment() {
     private lateinit var bin2Bar: ProgressBar
     private lateinit var bin3Bar: ProgressBar
     private lateinit var bin4Bar: ProgressBar
-
+    private lateinit var logoutButton: Button
     private lateinit var warningText: TextView
     private lateinit var handler: Handler
 
@@ -132,7 +133,12 @@ class HomeFragment : Fragment() {
         bin3Bar = view.findViewById(R.id.bin3Bar)
         bin4Bar = view.findViewById(R.id.bin4Bar)
         warningText = view.findViewById(R.id.warningText)
+        logoutButton = view.findViewById(R.id.buttonLogout)
 
+        logoutButton.setOnClickListener {
+            (activity as? MainActivity)?.logoutUser()
+
+        }
         handler = Handler(Looper.getMainLooper())
 
         barChart = view.findViewById(R.id.dashboard_bar_chart)
