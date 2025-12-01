@@ -8,7 +8,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wastesegregationapp.model.Bin
 
-class BinAdapter(private val binList: List<Bin>) :
+// 🔑 FIX 1: Change 'val' to 'var' in the constructor
+// This makes 'bins' a mutable property of the Adapter class itself.
+class BinAdapter(private var bins: List<Bin>) :
     RecyclerView.Adapter<BinAdapter.BinViewHolder>() {
 
     class BinViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -17,6 +19,8 @@ class BinAdapter(private val binList: List<Bin>) :
         val percentage: TextView = itemView.findViewById(R.id.percentage)
         val status: TextView = itemView.findViewById(R.id.status)
         val binIcon: ImageView = itemView.findViewById(R.id.binIcon)
+
+        // ❌ REMOVED: updateData() and getItemCount() were here
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BinViewHolder {
@@ -26,13 +30,20 @@ class BinAdapter(private val binList: List<Bin>) :
     }
 
     override fun onBindViewHolder(holder: BinViewHolder, position: Int) {
-        val bin = binList[position]
-        holder.binName.text = bin.binName
+        // 🔑 FIX 2: Use the class property 'bins' instead of the old parameter name 'binList'
+        val bin = bins[position]
+        holder.binName.text = bin.binId // Use binId or binName, depending on your data class
         holder.wasteType.text = "Waste Type: ${bin.wasteType}"
         holder.percentage.text = "${bin.percentage}%"
-        holder.status.text = "Status: ${bin.status}"
+        holder.status.text = "Status: ${bin.statusText}" // Use statusText from BinStatus
         holder.binIcon.setImageResource(bin.iconResId)
     }
 
-    override fun getItemCount(): Int = binList.size
+    fun updateData(newBins: List<Bin>) {
+        this.bins = newBins
+        notifyDataSetChanged()
+    }
+
+    // 🔑 FIX 4: Use the class property 'bins' size
+    override fun getItemCount(): Int = bins.size
 }

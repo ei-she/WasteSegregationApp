@@ -1,10 +1,9 @@
 package com.example.wastesegregationapp.model
 
 data class Bin(
-    val binName: String,
+    val binId: String,
     val wasteType: String,
     val percentage: Int,
-    val status: String,
+    val statusText: String,
     val iconResId: Int
 )
-

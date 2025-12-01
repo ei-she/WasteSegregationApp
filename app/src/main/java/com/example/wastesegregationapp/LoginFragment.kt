@@ -31,7 +31,6 @@ class LoginFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Safely cast the hosting activity to MainActivity
         if (context is MainActivity) {
             mainActivity = context
         }

@@ -7,9 +7,17 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.wastesegregationapp.model.Bin
+import androidx.fragment.app.activityViewModels // 🔑 NEW: For Shared ViewModel
+import androidx.lifecycle.Observer // 🔑 NEW: To observe LiveData
 
 class BinsFragment : Fragment() {
+
+    // 1. Declare the adapter and RecyclerView as properties
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var binAdapter: BinAdapter
+
+    // 2. Instantiate the Shared ViewModel
+    private val viewModel: BinDataViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -17,18 +25,23 @@ class BinsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_bins, container, false)
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerBins)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext()) // Vertical list
+        recyclerView = view.findViewById<RecyclerView>(R.id.recyclerBins)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        val bins = listOf(
-            Bin("Bin 01", "Plastic", 92, "FULL", R.drawable.plastic),
-            Bin("Bin 02", "Metal", 53, "HALF", R.drawable.metal),
-            Bin("Bin 03", "Biodegradable", 10, "EMPTY", R.drawable.bio),
-            Bin("Bin 04", "Plastic Bottles", 89, "FULL", R.drawable.plasticbottel)
-        )
-
-        recyclerView.adapter = BinAdapter(bins)
+        binAdapter = BinAdapter(emptyList())
+        recyclerView.adapter = binAdapter // Set the adapter
 
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel.liveBinData.observe(viewLifecycleOwner, Observer { binList ->
+
+            if (binList.isNotEmpty()) {
+                binAdapter.updateData(binList)
+            }
+        })
     }
 }

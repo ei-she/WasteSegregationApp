@@ -98,13 +98,11 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_bins -> {
-                    // Make sure you have BinsFragment imported or defined
-                    // Example: replaceFragment(BinsFragment())
+                    replaceFragment(BinsFragment())
                     true
                 }
                 R.id.navigation_reports -> {
-                    // Make sure you have ReportsFragment imported or defined
-                    // Example: replaceFragment(ReportsFragment())
+                    replaceFragment(ReportsFragment())
                     true
                 }
                 else -> false

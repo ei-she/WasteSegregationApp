@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.wastesegregationapp"
-    compileSdk = 36 // Assuming 34 based on common practice, but keeping your 36
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.wastesegregationapp"
@@ -37,7 +37,6 @@ android {
 }
 
 dependencies {
-    // Your existing dependencies
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
@@ -52,8 +51,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
 
-    // 🔑 Firebase Dependencies (You already had these, which is correct)
+    // for firebase
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-database-ktx")

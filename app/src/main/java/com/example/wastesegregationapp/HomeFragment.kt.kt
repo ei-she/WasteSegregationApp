@@ -25,6 +25,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.activityViewModels
 import org.w3c.dom.Text
 
 class HomeFragment : Fragment() {
@@ -43,6 +44,8 @@ class HomeFragment : Fragment() {
     private val client = OkHttpClient()
 
     private val updateInterval = 3000L
+
+    private val viewModel: BinDataViewModel by activityViewModels()
 
     private val WASTE_LABELS = listOf("Plastic","Biodegradable","Metal","Plastic Bottles")
     private val WASTE_COLORS = listOf(
