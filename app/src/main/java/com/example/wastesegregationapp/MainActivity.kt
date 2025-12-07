@@ -1,5 +1,6 @@
 package com.example.wastesegregationapp
 
+import DailyReport
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Context
@@ -9,6 +10,11 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 
 
 class MainActivity : AppCompatActivity() {
@@ -48,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     fun navigateToHome() {
         Log.d("Navigation", "Navigating to HomeFragment")
         loadHomeDashboard()
+        scheduleDailyReportUpload()
     }
 
     fun logoutUser() {
@@ -91,6 +98,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction().apply {
             setCustomAnimations(
@@ -100,5 +108,25 @@ class MainActivity : AppCompatActivity() {
             replace(R.id.fragment_container, fragment)
             commit()
         }
+    }
+    fun scheduleDailyReportUpload() {
+        val now = Calendar.getInstance()
+        val endofDay = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 0)
+        }
+        var delay = endofDay.timeInMillis - now.timeInMillis
+        if (delay < 0) {
+            delay += TimeUnit.DAYS.toMillis(1)
+        }
+        val dailyUploadRequest = PeriodicWorkRequestBuilder<DailyReport>(
+            1, TimeUnit.DAYS
+        ).setInitialDelay(delay, TimeUnit.MILLISECONDS)
+            .build()
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "DailyReportUpload",
+            ExistingPeriodicWorkPolicy.KEEP,
+            dailyUploadRequest)
     }
 }
