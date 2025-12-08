@@ -26,7 +26,13 @@ class LoginFragment : Fragment() {
     private lateinit var createAccountButton: Button
     private lateinit var loginButton: Button
 
-    // Reference to MainActivity to call navigation and session functions
+    private val PASSWORD_REQUIREMENTS =
+        "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#\$%^&+=.\\-_*/()<>,?]).{8,}\$".toRegex()
+    private fun isPasswordStrictlyValid(password: String): Boolean {
+        return PASSWORD_REQUIREMENTS.matches(password)
+    }
+
+
     private var mainActivity: MainActivity? = null
 
     override fun onAttach(context: Context) {
@@ -38,7 +44,6 @@ class LoginFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Initialize the FirebaseAuth instance
         auth = FirebaseAuth.getInstance()
     }
 
@@ -46,31 +51,26 @@ class LoginFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+
         val view = inflater.inflate(R.layout.fragment_login, container, false)
 
-        // Find UI elements based on your layout
         emailEditText = view.findViewById(R.id.editEmail) // Example ID
         passwordEditText = view.findViewById(R.id.editPassword) // Example ID
         createAccountButton = view.findViewById(R.id.buttonCreateAccount) // Example ID
         loginButton = view.findViewById(R.id.buttonLogin) // Example ID
 
-        // Set up the listeners
         createAccountButton.setOnClickListener {
-            handleSignUp() // This function registers the user
+            handleSignUp()
         }
 
         loginButton.setOnClickListener {
-            handleLogin() // This function logs in an existing user
+            handleLogin()
         }
 
         return view
     }
 
-    // ----------------------------------------------------------------------
-    // --- SIGN UP LOGIC (CREATE ACCOUNT) ---
-    // ----------------------------------------------------------------------
-
+    // sign up
     private fun handleSignUp() {
         val email = emailEditText.text.toString().trim()
         val password = passwordEditText.text.toString().trim()
@@ -79,12 +79,23 @@ class LoginFragment : Fragment() {
             Toast.makeText(requireContext(), "Email and password cannot be empty.", Toast.LENGTH_SHORT).show()
             return
         }
+        if (!isPasswordStrictlyValid(password)) {
+            val errorMessage = """
+                Password is weak! Please use a stronger one:
+                - At least 8 characters long
+                - Contains 1 uppercase letter (A-Z)
+                - Contains 1 lowercase letter (a-z)
+                - Contains 1 number (0-9)
+                - Contains 1 special symbol (!@#$%^&+=)
+            """.trimIndent()
 
-        // Call the Firebase method to create the user with the provided credentials
+            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
+            // 🔑 IMPORTANT: STOP execution here to prevent weak password registration
+            return
+        }
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
-                    // Sign up successful! User is automatically logged in.
                     Log.d("SignUp", "createUserWithEmail:success")
                     Toast.makeText(requireContext(), "Account created and logged in.", Toast.LENGTH_SHORT).show()
 
@@ -109,10 +120,7 @@ class LoginFragment : Fragment() {
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
-    // ----------------------------------------------------------------------
-    // --- LOGIN LOGIC (SIGN IN) ---
-    // ----------------------------------------------------------------------
-
+// Login
     private fun handleLogin() {
         val email = emailEditText.text.toString().trim()
         val password = passwordEditText.text.toString().trim()
@@ -122,18 +130,15 @@ class LoginFragment : Fragment() {
             return
         }
 
-        // Call the Firebase method to sign in an existing user
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
                     Log.d("Login", "signInWithEmail:success")
                     Toast.makeText(requireContext(), "Login successful.", Toast.LENGTH_SHORT).show()
 
-                    // Inform MainActivity to handle session and navigation
                     mainActivity?.saveLoginState(true)
                     mainActivity?.navigateToHome()
                 } else {
-                    // Login failed
                     Log.w("Login", "signInWithEmail:failure", task.exception)
                     Toast.makeText(
                         requireContext(),

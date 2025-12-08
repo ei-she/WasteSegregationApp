@@ -1,22 +1,27 @@
 package com.example.wastesegregationapp
 
+import DailyReport
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Context
 import android.util.Log
 import android.view.View
-import android.widget.Toast // Import for showing Toast messages
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.firebase.auth.FirebaseAuth // Already imported, critical for logout
+import com.google.firebase.auth.FirebaseAuth
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+
 
 class MainActivity : AppCompatActivity() {
 
-    // SharedPreferences Keys
     private val PREFS_FILE = "WiseWastePrefs"
     private val IS_LOGGED_IN = "isLoggedIn"
 
-    // Reference to BottomNavigationView
     private lateinit var bottomNav: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,20 +31,14 @@ class MainActivity : AppCompatActivity() {
         bottomNav = findViewById(R.id.bottom_navigation)
 
         if (savedInstanceState == null) {
-            // Determine which fragment to load first
             if (isUserLoggedIn()) {
-                // Load the HomeFragment and enable the bottom navigation
                 loadHomeDashboard()
             } else {
-                // Load the LoginFragment
                 replaceFragment(LoginFragment())
-                // Hide bottom navigation until logged in
                 bottomNav.visibility = View.GONE
             }
         }
     }
-
-    // --- SESSION MANAGEMENT FUNCTIONS (Called by LoginFragment) ---
 
     private fun isUserLoggedIn(): Boolean {
         val prefs = getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
@@ -55,42 +54,31 @@ class MainActivity : AppCompatActivity() {
     fun navigateToHome() {
         Log.d("Navigation", "Navigating to HomeFragment")
         loadHomeDashboard()
+        scheduleDailyReportUpload()
     }
 
-    // 🔑 LOGOUT FUNCTION (Called by HomeFragment) 🔑
     fun logoutUser() {
         Log.d("Logout", "User is logging out.")
 
-        // 1. Sign out of Firebase Authentication
-        // This is necessary to clear the Firebase-side session
         FirebaseAuth.getInstance().signOut()
 
-        // 2. Clear SharedPreferences state (Session Management)
-        // This ensures the app goes to the Login screen on restart
         saveLoginState(false)
 
-        // 3. Navigate back to the Login Fragment
         val loginFragment = LoginFragment()
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, loginFragment)
             .commit()
 
-        // 4. Hide the Bottom Navigation Bar
         bottomNav.visibility = View.GONE
 
-        // Notify the user
         Toast.makeText(this, "Logged out successfully.", Toast.LENGTH_SHORT).show()
     }
-
-    // --- NAVIGATION LOGIC ---
 
     private fun loadHomeDashboard() {
         bottomNav.visibility = View.VISIBLE
 
-        // Load the initial fragment (Dashboard)
         replaceFragment(HomeFragment())
 
-        // Set the listener for the bottom navigation
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_dashboard -> {
@@ -110,9 +98,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction().apply {
-            // Use custom animations for smoother transition away from login
             setCustomAnimations(
                 android.R.anim.fade_in,
                 android.R.anim.fade_out
@@ -120,5 +108,25 @@ class MainActivity : AppCompatActivity() {
             replace(R.id.fragment_container, fragment)
             commit()
         }
+    }
+    fun scheduleDailyReportUpload() {
+        val now = Calendar.getInstance()
+        val endofDay = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 0)
+        }
+        var delay = endofDay.timeInMillis - now.timeInMillis
+        if (delay < 0) {
+            delay += TimeUnit.DAYS.toMillis(1)
+        }
+        val dailyUploadRequest = PeriodicWorkRequestBuilder<DailyReport>(
+            1, TimeUnit.DAYS
+        ).setInitialDelay(delay, TimeUnit.MILLISECONDS)
+            .build()
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "DailyReportUpload",
+            ExistingPeriodicWorkPolicy.KEEP,
+            dailyUploadRequest)
     }
 }
