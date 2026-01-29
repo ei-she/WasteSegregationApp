@@ -50,71 +50,129 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="24dp"
-                android:text="@string/login_header"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/editEmail"
+            <LinearLayout
+                android:id="@+id/loginContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="@string/hint_email"
-                android:inputType="textEmailAddress"
-                android:textColor="#000000"
-                android:minHeight="48dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                />
+                android:orientation="vertical"
+                android:visibility="visible">
 
-            <EditText
-                android:id="@+id/editPassword"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="24dp"
+                    android:text="@string/login_header"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/editEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:hint="@string/hint_email"
+                    android:inputType="textEmailAddress"
+                    android:textColor="#000000"
+                    android:minHeight="48dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp" />
+
+                <EditText
+                    android:id="@+id/editPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    android:hint="@string/hint_password"
+                    android:inputType="textPassword"
+                    android:textColor="#000000"
+                    android:minHeight="48dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp" />
+
+                <Button
+                    android:id="@+id/buttonLogin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/login_button"
+                    android:backgroundTint="@color/login_green_button"
+                    android:textColor="@android:color/white"
+                    android:minHeight="56dp"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/textForgotPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@string/forgot_password"
+                    android:textColor="@android:color/darker_gray"
+                    android:layout_marginBottom="24dp"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <Button
+                    android:id="@+id/buttonCreateAccount"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/create_account_button"
+                    android:textColor="@color/login_green_text"
+                    app:strokeColor="@color/login_green_text"
+                    android:minHeight="56dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/otpContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                android:hint="@string/hint_password"
-                android:inputType="textPassword"
-                android:textColor="#000000"
-                android:minHeight="48dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-               />
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
 
-            <Button
-                android:id="@+id/buttonLogin"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/login_button"
-                android:backgroundTint="@color/login_green_button"
-                android:textColor="@android:color/white"
-                android:minHeight="56dp"
-                android:layout_marginBottom="8dp"/>
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@android:drawable/ic_dialog_email"
+                    android:layout_marginBottom="16dp"
+                    app:tint="@color/login_green_text" />
 
-            <TextView
-                android:id="@+id/textForgotPassword"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/forgot_password"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginBottom="24dp"
-                android:clickable="true"
-                android:focusable="true"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Verify your Email"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp"/>
 
-            <Button
-                android:id="@+id/buttonCreateAccount"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/create_account_button"
-                android:textColor="@color/login_green_text"
-                app:strokeColor="@color/login_green_text"
-                android:minHeight="56dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="We've sent a link to your email. Please click it to verify your account."
+                    android:layout_marginBottom="24dp"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/darker_gray"/>
+
+                <Button
+                    android:id="@+id/buttonSubmitOtp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="I've Verified My Email"
+                    android:backgroundTint="@color/login_green_button"
+                    android:textColor="@android:color/white"
+                    android:minHeight="56dp" />
+
+                <TextView
+                    android:id="@+id/textResendCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Resend Link"
+                    android:layout_marginTop="24dp"
+                    android:textColor="@color/login_green_text"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>
