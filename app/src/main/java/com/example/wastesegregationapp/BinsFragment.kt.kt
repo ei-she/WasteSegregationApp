@@ -12,11 +12,9 @@ import androidx.lifecycle.Observer // 🔑 NEW: To observe LiveData
 
 class BinsFragment : Fragment() {
 
-    // 1. Declare the adapter and RecyclerView as properties
     private lateinit var recyclerView: RecyclerView
     private lateinit var binAdapter: BinAdapter
 
-    // 2. Instantiate the Shared ViewModel
     private val viewModel: BinDataViewModel by activityViewModels()
 
     override fun onCreateView(

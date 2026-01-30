@@ -23,7 +23,6 @@ class ReportsFragment : Fragment() {
 
     private lateinit var barChart: BarChart
 
-    // Data definitions
     private val WASTE_LABELS = listOf("PLASTIC", "BIODEGRADABLE", "METAL", "PLASTIC BOTTLES")
     private val WASTE_COLORS = listOf(
         Color.parseColor("#FFC107"),
@@ -58,12 +57,11 @@ class ReportsFragment : Fragment() {
                 loadBarChartData(selectedYear)
                 setupMonthlyReports(selectedYear)
             }
-            override fun onNothingSelected(parent: AdapterView<*>) { /* No-op */ }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
     private fun setupBarChartStyle() {
-        // Basic configuration and styling
         barChart.description.isEnabled = false
         barChart.setPinchZoom(false)
         barChart.setDrawGridBackground(false)
@@ -122,7 +120,6 @@ class ReportsFragment : Fragment() {
         barChart.invalidate()
     }
 
-    // Helper function to get month labels(used by X-Axis setup)
     private fun getMonthLabels(): List<String> {
         return listOf(
             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -131,9 +128,8 @@ class ReportsFragment : Fragment() {
     }
 
     private fun getWasteData(year: String): List<Pair<String, List<Float>>> {
-        // In a real app, this would use the 'year' to fetch specific data.
-        return getMonthLabels().mapIndexed { index, month ->
-            val baseValue = 400f + (index - 5) * 5 // Subtle variation across months
+      return getMonthLabels().mapIndexed { index, month ->
+            val baseValue = 400f + (index - 5) * 5
             Pair(
                 month,
                 listOf(baseValue - 20f, baseValue + 10f, baseValue - 30f, baseValue)

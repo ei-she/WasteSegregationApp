@@ -8,8 +8,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wastesegregationapp.model.Bin
 
-// 🔑 FIX 1: Change 'val' to 'var' in the constructor
-// This makes 'bins' a mutable property of the Adapter class itself.
 class BinAdapter(private var bins: List<Bin>) :
     RecyclerView.Adapter<BinAdapter.BinViewHolder>() {
 
@@ -20,7 +18,6 @@ class BinAdapter(private var bins: List<Bin>) :
         val status: TextView = itemView.findViewById(R.id.status)
         val binIcon: ImageView = itemView.findViewById(R.id.binIcon)
 
-        // ❌ REMOVED: updateData() and getItemCount() were here
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BinViewHolder {
@@ -30,7 +27,6 @@ class BinAdapter(private var bins: List<Bin>) :
     }
 
     override fun onBindViewHolder(holder: BinViewHolder, position: Int) {
-        // 🔑 FIX 2: Use the class property 'bins' instead of the old parameter name 'binList'
         val bin = bins[position]
         holder.binName.text = bin.binId // Use binId or binName, depending on your data class
         holder.wasteType.text = "Waste Type: ${bin.wasteType}"
@@ -44,6 +40,5 @@ class BinAdapter(private var bins: List<Bin>) :
         notifyDataSetChanged()
     }
 
-    // 🔑 FIX 4: Use the class property 'bins' size
     override fun getItemCount(): Int = bins.size
 }

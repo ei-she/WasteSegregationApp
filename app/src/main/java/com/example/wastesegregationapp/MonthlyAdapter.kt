@@ -29,8 +29,9 @@ class MonthlyReportAdapter(private val reports: List<MonthlyReport>) :
         holder.monthTextView.text = "${report.monthName.uppercase()} ${report.year}"
 
         holder.viewButton.setOnClickListener {
-            // TODO: Implement navigation or action when "VIEW" is clicked
-            Toast.makeText(holder.itemView.context, "Viewing report for ${report.monthName}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(holder.itemView.context,
+                "Viewing report for ${report.monthName}",
+                Toast.LENGTH_SHORT).show()
         }
     }
 

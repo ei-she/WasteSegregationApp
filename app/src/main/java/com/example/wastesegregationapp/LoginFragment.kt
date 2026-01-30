@@ -27,10 +27,9 @@ class LoginFragment : Fragment() {
     private lateinit var createAccountButton: Button
     private lateinit var loginButton: Button
 
-    // Container Variables
     private lateinit var loginContainer: View
-    private lateinit var otpContainer: View // This is now our Verification Message Container
-    private lateinit var submitOtpButton: Button // Now the "I've Verified" Button
+    private lateinit var otpContainer: View
+    private lateinit var submitOtpButton: Button
     private lateinit var resendCodeText: TextView
 
     private val PASSWORD_REQUIREMENTS =
@@ -82,7 +81,9 @@ class LoginFragment : Fragment() {
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
             if (email.isEmpty()) {
-                Toast.makeText(requireContext(), "Please enter your email first", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(),
+                    "Please enter your email first",
+                    Toast.LENGTH_SHORT).show()
             } else {
                 checkEmailAndProceed(email)
             }
@@ -92,20 +93,25 @@ class LoginFragment : Fragment() {
             handleVerificationCheck()
         }
 
-        // --- RESEND LINK LOGIC ---
         resendCodeText.setOnClickListener {
             val user = auth.currentUser
             if (user != null) {
                 user.sendEmailVerification()
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(requireContext(), "A new verification link has been sent to ${user.email}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(requireContext(),
+                                "A new verification link has been sent to ${user.email}",
+                                Toast.LENGTH_LONG).show()
                         } else {
-                            Toast.makeText(requireContext(), "Failed to send: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(),
+                                "Failed to send: ${task.exception?.message}",
+                                Toast.LENGTH_SHORT).show()
                         }
                     }
             } else {
-                Toast.makeText(requireContext(), "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(),
+                    "Session expired. Please log in again.",
+                    Toast.LENGTH_SHORT).show()
                 otpContainer.visibility = View.GONE
                 loginContainer.visibility = View.VISIBLE
             }
@@ -114,13 +120,14 @@ class LoginFragment : Fragment() {
         return view
     }
 
-    // --- SIGN UP LOGIC ---
     private fun handleSignUp() {
         val email = emailEditText.text.toString().trim()
         val password = passwordEditText.text.toString().trim()
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(requireContext(), "Email and password cannot be empty.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(),
+                "Email and password cannot be empty.",
+                Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -131,7 +138,9 @@ class LoginFragment : Fragment() {
                 - 1 uppercase (A-Z), 1 lowercase (a-z)
                 - 1 number (0-9), 1 special symbol
             """.trimIndent()
-            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(),
+                errorMessage,
+                Toast.LENGTH_LONG).show()
             return
         }
 
@@ -141,7 +150,9 @@ class LoginFragment : Fragment() {
                     val user = auth.currentUser
                     user?.sendEmailVerification()?.addOnCompleteListener { verifyTask ->
                         if (verifyTask.isSuccessful) {
-                            Toast.makeText(requireContext(), "Registration successful! Check your email to verify.", Toast.LENGTH_LONG).show()
+                            Toast.makeText(requireContext(),
+                                "Registration successful! Check your email to verify.",
+                                Toast.LENGTH_LONG).show()
                             auth.signOut()
                         }
                     }
@@ -158,7 +169,8 @@ class LoginFragment : Fragment() {
             is FirebaseAuthUserCollisionException -> "Account already exists."
             else -> "Error: ${exception?.localizedMessage ?: "Unknown Error"}"
         }
-        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+        Toast.makeText(requireContext(),
+            message, Toast.LENGTH_LONG).show()
     }
 
     private fun handleLogin() {
@@ -166,7 +178,9 @@ class LoginFragment : Fragment() {
         val password = passwordEditText.text.toString().trim()
 
         if (password.isEmpty()) {
-            Toast.makeText(requireContext(), "Please enter your password.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(),
+                "Please enter your password.",
+                Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -185,7 +199,9 @@ class LoginFragment : Fragment() {
                     }
                 } else {
                     Log.w("Login", "signInWithEmail:failure", task.exception)
-                    Toast.makeText(requireContext(), "Authentication failed. Check your password.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(),
+                        "Authentication failed. Check your password.",
+                        Toast.LENGTH_SHORT).show()
                 }
             }
     }
@@ -201,8 +217,10 @@ class LoginFragment : Fragment() {
                         handleLogin()
                     }
                 } else {
-                    Log.e("AuthError", "Error checking email", task.exception)
-                    Toast.makeText(requireContext(), "Error checking account.", Toast.LENGTH_SHORT).show()
+                    Log.e("AuthError",
+                        "Error checking email", task.exception)
+                    Toast.makeText(requireContext(),
+                        "Error checking account.", Toast.LENGTH_SHORT).show()
                 }
             }
     }
@@ -213,14 +231,18 @@ class LoginFragment : Fragment() {
         user?.reload()?.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 if (user.isEmailVerified) {
-                    Toast.makeText(requireContext(), "Verification Successful!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(),
+                        "Verification Successful!", Toast.LENGTH_SHORT).show()
                     mainActivity?.saveLoginState(true)
                     mainActivity?.navigateToHome()
                 } else {
-                    Toast.makeText(requireContext(), "Email not verified yet. Please check your inbox.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(),
+                        "Email not verified yet. Please check your inbox.",
+                        Toast.LENGTH_LONG).show()
                 }
             } else {
-                Toast.makeText(requireContext(), "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(),
+                    "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -242,7 +264,9 @@ class LoginFragment : Fragment() {
         val email = emailEditText.text.toString().trim()
 
         if (email.isEmpty()) {
-            Toast.makeText(requireContext(), "Please enter your email address first.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(),
+                "Please enter your email address first.",
+                Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -253,9 +277,13 @@ class LoginFragment : Fragment() {
                 auth.sendPasswordResetEmail(email)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(requireContext(), "Reset link sent! Please check your email.", Toast.LENGTH_LONG).show()
+                            Toast.makeText(requireContext(),
+                                "Reset link sent! Please check your email.",
+                                Toast.LENGTH_LONG).show()
                         } else {
-                            Toast.makeText(requireContext(), "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(),
+                                "Error: ${task.exception?.message}",
+                                Toast.LENGTH_SHORT).show()
                         }
                     }
             }
