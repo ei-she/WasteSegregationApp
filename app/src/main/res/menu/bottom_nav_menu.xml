@@ -6,8 +6,8 @@
 
     <item
         android:id="@+id/navigation_bins"
-        android:icon="@drawable/bins"
-        android:title="Bins" />
+        android:icon="@drawable/ic_bell_notification"
+        android:title="Notification" />
 
     <item
         android:id="@+id/navigation_reports"

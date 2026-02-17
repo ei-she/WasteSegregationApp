@@ -7,39 +7,34 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.fragment.app.activityViewModels // 🔑 NEW: For Shared ViewModel
-import androidx.lifecycle.Observer // 🔑 NEW: To observe LiveData
+import com.example.wastesegregationapp.Notification.NotificationItem
 
 class BinsFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var binAdapter: BinAdapter
-
-    private val viewModel: BinDataViewModel by activityViewModels()
+    private lateinit var notificationAdapter: NotificationAdapter // 🔔 Changed from BinAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // We reuse fragment_bins layout since it already has a RecyclerView
         val view = inflater.inflate(R.layout.fragment_bins, container, false)
 
-        recyclerView = view.findViewById<RecyclerView>(R.id.recyclerBins)
+        recyclerView = view.findViewById(R.id.notificationsRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        binAdapter = BinAdapter(emptyList())
-        recyclerView.adapter = binAdapter // Set the adapter
+        // 📝 For now, let's use some sample data to make sure it works
+        val sampleNotifications = listOf(
+            NotificationItem("System Alert", "Residual bin is almost full!", "10:30 AM"),
+            NotificationItem("Auth Update", "Email verified successfully.", "9:15 AM"),
+            NotificationItem("Tip", "Rinse plastic containers before recycling!", "Yesterday")
+
+        )
+
+        notificationAdapter = NotificationAdapter(sampleNotifications)
+        recyclerView.adapter = notificationAdapter
 
         return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        viewModel.liveBinData.observe(viewLifecycleOwner, Observer { binList ->
-
-            if (binList.isNotEmpty()) {
-                binAdapter.updateData(binList)
-            }
-        })
     }
 }

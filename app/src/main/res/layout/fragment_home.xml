@@ -56,11 +56,6 @@
                 android:textSize="14sp"
                 tools:ignore="RelativeOverlap" />
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/notification"
-                android:contentDescription="@string/settings_desc" />
         </LinearLayout>
 
         <androidx.cardview.widget.CardView
@@ -95,7 +90,7 @@
                     android:id="@+id/textTotalBins"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/bin_count"
+                    android:text="3"
                     android:textColor="@android:color/black"
                     android:textSize="30sp"
                     android:textStyle="bold"
@@ -207,14 +202,14 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginEnd="8dp"
-                        android:contentDescription="@string/plastic_name"
-                        android:src="@drawable/plastic" />
+                        android:contentDescription="Residual"
+                        android:src="@drawable/compost" />
 
                     <TextView
                         android:layout_width="120dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:text="@string/plastic__name" />
+                        android:text="Residual" />
 
                     <ProgressBar
                         android:id="@+id/bin1Bar"
@@ -246,14 +241,14 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginEnd="8dp"
-                        android:contentDescription="@string/metal_name"
-                        android:src="@drawable/metal" />
+                        android:contentDescription="Non-Residual"
+                        android:src="@drawable/non_residual" />
 
                     <TextView
                         android:layout_width="120dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:text="@string/metal1" />
+                        android:text="Non - Residual" />
 
                     <ProgressBar
                         android:id="@+id/bin2Bar"
@@ -285,14 +280,14 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginEnd="8dp"
-                        android:contentDescription="@string/biodegradable1"
-                        android:src="@drawable/bio" />
+                        android:contentDescription="Recyclable"
+                        android:src="@drawable/recycle_bin" />
 
                     <TextView
                         android:layout_width="120dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:text="@string/biodegradable2" />
+                        android:text="Recyclable" />
 
                     <ProgressBar
                         android:id="@+id/bin3Bar"
@@ -309,45 +304,6 @@
                         android:layout_height="24dp"
                         android:layout_marginStart="8dp"
                         android:contentDescription="@string/alert1"
-                        android:src="@android:drawable/ic_dialog_alert"
-                        android:visibility="gone" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="8dp"
-                        android:contentDescription="@string/plastic_bottle1"
-                        android:src="@drawable/plasticbottel" />
-
-                    <TextView
-                        android:layout_width="121dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:text="@string/plastic_bottle2" />
-
-                    <ProgressBar
-                        android:id="@+id/bin4Bar"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="0dp"
-                        android:layout_height="20dp"
-                        android:layout_weight="1"
-                        android:max="100"
-                        android:progress="5" />
-
-                    <ImageView
-                        android:id="@+id/bin4Alert"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginStart="8dp"
-                        android:contentDescription="@null"
                         android:src="@android:drawable/ic_dialog_alert"
                         android:visibility="gone" />
                 </LinearLayout>

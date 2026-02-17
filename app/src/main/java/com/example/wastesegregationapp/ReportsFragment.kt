@@ -23,15 +23,14 @@ class ReportsFragment : Fragment() {
 
     private lateinit var barChart: BarChart
 
-    private val WASTE_LABELS = listOf("PLASTIC", "BIODEGRADABLE", "METAL", "PLASTIC BOTTLES")
+    private val WASTE_LABELS = listOf("Non - Residual", "Residual", "Recyclable")
     private val WASTE_COLORS = listOf(
         Color.parseColor("#FFC107"),
         Color.parseColor("#4CAF50"),
         Color.parseColor("#9E9E9E"),
-        Color.parseColor("#2196F3")
     )
 
-    private val DEFAULT_YEAR = "2025"
+    private val DEFAULT_YEAR = "2026"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

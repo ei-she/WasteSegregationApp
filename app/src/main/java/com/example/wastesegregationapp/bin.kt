@@ -7,3 +7,5 @@ data class Bin(
     val statusText: String,
     val iconResId: Int
 )
+
+

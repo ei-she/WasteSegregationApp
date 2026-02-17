@@ -37,10 +37,9 @@ package com.example.wastesegregationapp
 
         private fun fetchDataFromEsp(): List<Bin> {
             return listOf(
-                Bin("Bin 1", "Plastic", (0..100).random(), "STATUS_1", R.drawable.plastic),
-                Bin("Bin 2", "Paper", (0..100).random(), "STATUS_2", R.drawable.metal),
-                Bin("Bin 3", "Metal", (0..100).random(), "STATUS_3", R.drawable.bio),
-                Bin("Bin 4", "Glass", (0..100).random(), "STATUS_4", R.drawable.plasticbottel)
+                Bin("Bin 1", "Non - Residual", (0..100).random(), "STATUS_1", R.drawable.non_residual),
+                Bin("Bin 2", "Residual", (0..100).random(), "STATUS_2", R.drawable.compost),
+                Bin("Bin 3", "Recyclable", (0..100).random(), "STATUS_3", R.drawable.recycle_bin),
             )
         }
 

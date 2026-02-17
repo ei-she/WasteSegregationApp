@@ -1,3 +1,4 @@
+
 package com.example.wastesegregationapp
 
 import android.graphics.Color
@@ -33,7 +34,6 @@ class HomeFragment : Fragment() {
     private lateinit var bin1Bar: ProgressBar
     private lateinit var bin2Bar: ProgressBar
     private lateinit var bin3Bar: ProgressBar
-    private lateinit var bin4Bar: ProgressBar
     private lateinit var logoutButton: Button
     private lateinit var warningText: TextView
     private lateinit var handler: Handler
@@ -47,14 +47,13 @@ class HomeFragment : Fragment() {
 
     private val viewModel: BinDataViewModel by activityViewModels()
 
-    private val WASTE_LABELS = listOf("Plastic","Biodegradable","Metal","Plastic Bottles")
+    private val WASTE_LABELS = listOf("Non-Residual","Residual","Recyclable")
     private val WASTE_COLORS = listOf(
         Color.parseColor("#FFC107"), // Yellow
         Color.parseColor("#4CAF50"), // Green
-        Color.parseColor("#9E9E9E"), // Gray
         Color.parseColor("#2196F3")  // Blue
     )
-    private val DEFAULT_YEAR = "2025"
+    private val DEFAULT_YEAR = "2026"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,10 +83,9 @@ class HomeFragment : Fragment() {
                     val bin1 = json.getInt("bin1")
                     val bin2 = json.getInt("bin2")
                     val bin3 = json.getInt("bin3")
-                    val bin4 = json.getInt("bin4")
 
                     withContext(Dispatchers.Main) {
-                        updateUI(bin1, bin2, bin3, bin4)
+                        updateUI(bin1, bin2, bin3)
                     }
                 } else {
                     Log.e("HomeFragment", "Failed response: ${response.code}")
@@ -98,25 +96,22 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun updateUI(bin1: Int, bin2: Int, bin3: Int, bin4: Int) {
+    private fun updateUI(bin1: Int, bin2: Int, bin3: Int) {
         bin1Bar.progress = bin1
         bin2Bar.progress = bin2
         bin3Bar.progress = bin3
-        bin4Bar.progress = bin4
 
         val warnings = StringBuilder()
 
-        if (bin1 >= 95) warnings.append("⚠️ Bin 1 Full!\n")
-        else if (bin1 >= 80) warnings.append("⚠️ Bin 1 Almost Full\n")
+        if (bin1 >= 95) warnings.append("⚠️ Non-Residual Bin Full!\n")
+        else if (bin1 >= 80) warnings.append("⚠️ Non-Residual Bin Almost Full\n")
 
-        if (bin2 >= 95) warnings.append("⚠️ Bin 2 Full!\n")
-        else if (bin2 >= 80) warnings.append("⚠️ Bin 2 Almost Full\n")
+        if (bin2 >= 95) warnings.append("⚠️ Residual Bin Full!\n")
+        else if (bin2 >= 80) warnings.append("⚠️ Residual Bin Almost Full\n")
 
-        if (bin3 >= 95) warnings.append("⚠️ Bin 3 Full!\n")
-        else if (bin3 >= 80) warnings.append("⚠️ Bin 3 Almost Full\n")
+        if (bin3 >= 95) warnings.append("⚠️ Recyclable Bin Full!\n")
+        else if (bin3 >= 80) warnings.append("⚠️ Recyclable Bin Almost Full\n")
 
-        if (bin4 >= 95) warnings.append("⚠️ Bin 4 Full!\n")
-        else if (bin4 >= 80) warnings.append("⚠️ Bin 4 Almost Full\n")
 
         if (warnings.isNotEmpty()) {
             warningText.visibility = View.VISIBLE
@@ -134,7 +129,6 @@ class HomeFragment : Fragment() {
         bin1Bar = view.findViewById(R.id.bin1Bar)
         bin2Bar = view.findViewById(R.id.bin2Bar)
         bin3Bar = view.findViewById(R.id.bin3Bar)
-        bin4Bar = view.findViewById(R.id.bin4Bar)
         warningText = view.findViewById(R.id.warningText)
         logoutButton = view.findViewById(R.id.buttonLogout)
 
