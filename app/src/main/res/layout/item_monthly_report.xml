@@ -19,7 +19,7 @@
             android:id="@+id/text_month_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="JANUARY 2025"
+            android:text="JANUARY 2026"
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:textStyle="bold"

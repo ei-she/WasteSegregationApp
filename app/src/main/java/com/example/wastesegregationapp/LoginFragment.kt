@@ -80,13 +80,17 @@ class LoginFragment : Fragment() {
 
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
-            if (email.isEmpty()) {
-                Toast.makeText(requireContext(),
-                    "Please enter your email first",
-                    Toast.LENGTH_SHORT).show()
-            } else {
-                checkEmailAndProceed(email)
-            }
+//            if (email.isEmpty()) {
+//                Toast.makeText(requireContext(),
+//                    "Please enter your email first",
+//                    Toast.LENGTH_SHORT).show()
+//            } else {
+//                checkEmailAndProceed(email)
+//            }
+//        }
+            Log.d("Login", "Bypassing login for offline 2026 testing.")
+            mainActivity?.saveLoginState(true) // Saves the 'Logged In' state
+            mainActivity?.navigateToHome()    // Moves you to the Dashboard
         }
 
         submitOtpButton.setOnClickListener {

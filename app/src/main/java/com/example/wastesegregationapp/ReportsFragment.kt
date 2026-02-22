@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.Spinner
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,139 +19,116 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ReportsFragment : Fragment() {
 
-    private lateinit var barChart: BarChart
+    private var barChart: BarChart? = null // Using nullable to prevent crashes
 
-    private val WASTE_LABELS = listOf("Non - Residual", "Residual", "Recyclable")
+    private val WASTE_LABELS = listOf("Non-Residual", "Residual", "Recyclable")
     private val WASTE_COLORS = listOf(
-        Color.parseColor("#FFC107"),
-        Color.parseColor("#4CAF50"),
-        Color.parseColor("#9E9E9E"),
+        Color.parseColor("#FFC107"), // Yellow
+        Color.parseColor("#4CAF50"), // Green
+        Color.parseColor("#2196F3")  // Blue
     )
 
-    private val DEFAULT_YEAR = "2026"
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_reports, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        barChart = view.findViewById(R.id.waste_bar_chart)
-        setupBarChartStyle()
+        barChart = view.findViewById(R.id.dashboard_bar_chart)
 
-        loadBarChartData(DEFAULT_YEAR)
-        setupMonthlyReports(DEFAULT_YEAR)
+        barChart?.let {
+            setupBarChartStyle(it)
+            loadBarChartData(it)
+        }
 
         val yearSpinner: Spinner = view.findViewById(R.id.year_spinner)
         yearSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val selectedYear = parent.getItemAtPosition(position).toString()
-
-                loadBarChartData(selectedYear)
                 setupMonthlyReports(selectedYear)
             }
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
-    private fun setupBarChartStyle() {
-        barChart.description.isEnabled = false
-        barChart.setPinchZoom(false)
-        barChart.setDrawGridBackground(false)
-        barChart.animateY(1000)
+    private fun setupBarChartStyle(chart: BarChart) {
+        chart.description.isEnabled = false
+        chart.setDrawGridBackground(false)
+        chart.setDrawBarShadow(false)
+        chart.setDrawValueAboveBar(true)
+        chart.animateY(1000)
 
-        val leftAxis = barChart.axisLeft
-        leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = 500f
-        leftAxis.granularity = 100f
-        leftAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                return "${value.toInt()}KG"
-            }
-        }
-        barChart.axisRight.isEnabled = false
-
-        val months = getMonthLabels()
-        val xAxis = barChart.xAxis
+        val xAxis = chart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.setDrawGridLines(false)
         xAxis.granularity = 1f
-        xAxis.isGranularityEnabled = true
-        xAxis.labelCount = months.size
-        xAxis.valueFormatter = IndexAxisValueFormatter(months.toTypedArray())
+        xAxis.labelRotationAngle = -45f // Rotate labels to prevent overlap
+        xAxis.valueFormatter = IndexAxisValueFormatter(getDynamicDayLabels())
 
-        val legend = barChart.legend
-        legend.verticalAlignment = Legend.LegendVerticalAlignment.TOP
-        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER)
-        legend.orientation = Legend.LegendOrientation.HORIZONTAL
-        legend.setDrawInside(false)
-        legend.xEntrySpace = 15f
-        legend.formSize = 8f
-        legend.form = Legend.LegendForm.SQUARE
+        val leftAxis = chart.axisLeft
+        leftAxis.setDrawGridLines(false) // Cleaner look
+        leftAxis.axisMinimum = 0f
+        leftAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String = "${value.toInt()}kg"
+        }
+        chart.axisRight.isEnabled = false
+
+        val l = chart.legend
+        l.verticalAlignment = Legend.LegendVerticalAlignment.TOP
+        l.horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+        l.orientation = Legend.LegendOrientation.VERTICAL
+        l.setDrawInside(true)
     }
 
-    private fun loadBarChartData(year: String) {
-        val wasteData = getWasteData(year)
-        val barEntries = mutableListOf<BarEntry>()
-        val groupCount = wasteData.size
+    private fun loadBarChartData(chart: BarChart) {
+        val entries = mutableListOf<BarEntry>()
 
-        for (i in 0 until groupCount) {
-            val dataValues = wasteData[i].second.toFloatArray()
-            barEntries.add(BarEntry(i.toFloat(), dataValues))
+        for (i in 0 until 7) {
+            val val1 = (20..50).random().toFloat()
+            val val2 = (30..60).random().toFloat()
+            val val3 = (15..40).random().toFloat()
+            entries.add(BarEntry(i.toFloat(), floatArrayOf(val1, val2, val3)))
         }
 
-        val set = BarDataSet(barEntries, "")
+        val set = BarDataSet(entries, "")
         set.colors = WASTE_COLORS
-/*
-        set.stackLabels = WASTE_LABELS
-*/
+        set.stackLabels = WASTE_LABELS.toTypedArray()
+        set.setDrawValues(false) // Keeps the UI clean
+
         val data = BarData(set)
-        data.barWidth = 0.8f
+        data.barWidth = 0.5f
 
-        barChart.data = data
-        barChart.setFitBars(true)
-        barChart.invalidate()
+        chart.data = data
+        chart.setFitBars(true)
+        chart.invalidate()
     }
 
-    private fun getMonthLabels(): List<String> {
-        return listOf(
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        )
-    }
+    private fun getDynamicDayLabels(): Array<String> {
+        val labels = mutableListOf<String>()
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("MMM d", Locale.getDefault())
 
-    private fun getWasteData(year: String): List<Pair<String, List<Float>>> {
-      return getMonthLabels().mapIndexed { index, month ->
-            val baseValue = 400f + (index - 5) * 5
-            Pair(
-                month,
-                listOf(baseValue - 20f, baseValue + 10f, baseValue - 30f, baseValue)
-            )
+        for (i in 0 until 7) {
+            val tempCal = calendar.clone() as Calendar
+            tempCal.add(Calendar.DAY_OF_YEAR, -(6 - i))
+            labels.add(dateFormat.format(tempCal.time))
         }
+        return labels.toTypedArray()
     }
 
     private fun setupMonthlyReports(year: String) {
         val recyclerView: RecyclerView = requireView().findViewById(R.id.monthly_reports_recycler)
+        val months = listOf("January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December")
+        val monthlyData = months.map { MonthlyReport(it, year) }
 
-        val monthlyData = generateMonthlyReports(year)
-
-        val adapter = MonthlyReportAdapter(monthlyData)
         recyclerView.layoutManager = LinearLayoutManager(context)
-        recyclerView.adapter = adapter
-    }
-
-    private fun generateMonthlyReports(year: String): List<MonthlyReport> {
-        val months = listOf(
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        )
-        return months.map { month -> MonthlyReport(month, year) }
+        recyclerView.adapter = MonthlyReportAdapter(monthlyData)
     }
 }

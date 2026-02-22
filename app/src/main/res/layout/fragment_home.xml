@@ -12,7 +12,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="16dp">
+        android:paddingBottom="32dp">
 
         <LinearLayout
             android:id="@+id/topBar"
@@ -29,7 +29,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/logo"
-                android:contentDescription="@string/logo_desc" />
+                android:contentDescription="Logo" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -50,24 +50,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Logout"
-                android:layout_marginEnd="8dp"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:textColor="@android:color/holo_red_dark"
-                android:textSize="14sp"
-                tools:ignore="RelativeOverlap" />
-
+                android:textColor="@android:color/holo_red_dark" />
         </LinearLayout>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardTotalBins"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/white"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="16dp"
             app:cardCornerRadius="14dp"
-            app:cardElevation="10dp"
+            app:cardElevation="4dp"
             app:layout_constraintTop_toBottomOf="@id/topBar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -76,14 +71,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp"
-                android:gravity="center_horizontal">
+                android:padding="16dp"
+                android:gravity="center">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/total_bins_online"
-                    android:textSize="30sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -92,20 +87,16 @@
                     android:layout_height="wrap_content"
                     android:text="3"
                     android:textColor="@android:color/black"
-                    android:textSize="30sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="4dp"/>
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
-            android:id="@+id/cardAnalytics"
+            android:id="@+id/cardTips"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/white"
+            android:layout_margin="12dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
             app:layout_constraintTop_toBottomOf="@id/cardTotalBins"
@@ -116,219 +107,150 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="16dp"
+                android:background="#E8F5E9">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/analytic_report"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black"
+                    android:text="💡 Segregation Tip"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
+                    android:textColor="#2E7D32"
+                    android:textSize="14sp" />
 
-                <com.github.mikephil.charting.charts.BarChart
-                    android:id="@+id/dashboard_bar_chart"
+                <TextView
+                    android:id="@+id/textSegregationTip"
                     android:layout_width="match_parent"
-                    android:layout_height="300dp" /> </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/warningprompt"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:backgroundTint="@color/white"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="3dp"
-            app:layout_constraintTop_toBottomOf="@id/cardAnalytics"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <TextView
-                android:id="@+id/warningPrompt"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:padding="12dp"
-                android:background="@drawable/ic_bell_notification"
-                android:text="@string/warning_bin_full"
-                android:textColor="@android:color/white"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:textSize="14sp"
-                android:visibility="gone" app:layout_constraintTop_toBottomOf="@id/warningPrompt"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Rinse plastic containers before throwing them in the Recyclable bin."
+                    android:textColor="@android:color/black"
+                    android:textSize="15sp" />
+            </LinearLayout>
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardBinMonitoring"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/white"
+            android:layout_margin="12dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:cardElevation="4dp"
+            app:layout_constraintTop_toBottomOf="@id/cardTips"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/warningprompt">
+            app:layout_constraintEnd_toEndOf="parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp"> <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="@string/live_monitoring"
-                android:textColor="@android:color/black"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/live_monitoring"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="12dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginBottom="12dp">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="8dp"
-                        android:contentDescription="Residual"
-                        android:src="@drawable/compost" />
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/compost"
+                        android:layout_marginEnd="8dp"/>
 
                     <TextView
-                        android:layout_width="120dp"
+                        android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:text="Residual" />
+                        android:text="Residual"/>
 
                     <ProgressBar
                         android:id="@+id/bin1Bar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
-                        android:layout_height="20dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:max="100"
-                        android:progress="5" />
-
-                    <ImageView
-                        android:id="@+id/bin1Alert"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginStart="8dp"
-                        android:contentDescription="@string/alert"
-                        android:src="@android:drawable/ic_dialog_alert"
-                        android:visibility="gone" />
+                        android:progress="45"/>
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:layout_marginBottom="12dp">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="8dp"
-                        android:contentDescription="Non-Residual"
-                        android:src="@drawable/non_residual" />
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/non_residual"
+                        android:layout_marginEnd="8dp"/>
 
                     <TextView
-                        android:layout_width="120dp"
+                        android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:text="Non - Residual" />
+                        android:text="Non-Residual"/>
 
                     <ProgressBar
                         android:id="@+id/bin2Bar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
-                        android:layout_height="20dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:max="100"
-                        android:progress="5" />
+                        android:progress="20"/>
 
-                    <ImageView
-                        android:id="@+id/bin2Alert"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginStart="8dp"
-                        android:contentDescription="@string/alert"
-                        android:src="@android:drawable/ic_dialog_alert"
-                        android:visibility="gone" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:gravity="center_vertical">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="8dp"
-                        android:contentDescription="Recyclable"
-                        android:src="@drawable/recycle_bin" />
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/recycle_bin"
+                        android:layout_marginEnd="8dp"/>
 
                     <TextView
-                        android:layout_width="120dp"
+                        android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:text="Recyclable" />
+                        android:text="Recyclable"/>
 
                     <ProgressBar
                         android:id="@+id/bin3Bar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
-                        android:layout_height="20dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:max="100"
-                        android:progress="5" />
+                        android:progress="80"/>
 
-                    <ImageView
-                        android:id="@+id/bin3Alert"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginStart="8dp"
-                        android:contentDescription="@string/alert1"
-                        android:src="@android:drawable/ic_dialog_alert"
-                        android:visibility="gone" />
                 </LinearLayout>
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
 
         <TextView
             android:id="@+id/warningText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:padding="12dp"
             android:layout_margin="16dp"
-            android:textColor="@android:color/black"
+            android:padding="12dp"
             android:background="#FFF59D"
-            android:textSize="14sp"
             android:textStyle="bold"
-            android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardBinMonitoring"
             android:gravity="center"
-            android:elevation="2dp" />
-
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/cardBinMonitoring"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </androidx.core.widget.NestedScrollView>
