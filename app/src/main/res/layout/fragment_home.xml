@@ -23,7 +23,8 @@
             android:padding="12dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintEnd_toEndOf="parent"
+            app:cardBackgroundColor="@android:color/white">
 
             <ImageView
                 android:layout_width="40dp"
@@ -63,6 +64,7 @@
             android:layout_marginTop="16dp"
             app:cardCornerRadius="14dp"
             app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/white"
             app:layout_constraintTop_toBottomOf="@id/topBar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -144,15 +146,40 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="16dp"
+                app:cardBackgroundColor="@android:color/white">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/live_monitoring"
-                    android:textStyle="bold"
-                    android:textSize="16sp"
-                    android:layout_marginBottom="12dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp"
+                    app:cardBackgroundColor="@android:color/white">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/live_monitoring"
+                        android:textStyle="bold"
+                        android:textSize="16sp" />
+
+                    <View
+                        android:id="@+id/statusDot"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/redstatus_dot" />
+
+                    <TextView
+                        android:id="@+id/statusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Offline"
+                        android:textSize="12sp"
+                        android:textColor="#757575" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -172,13 +199,11 @@
                         android:text="Residual"/>
 
                     <ProgressBar
-                        android:id="@+id/bin1Bar"
-                        style="?android:attr/progressBarStyleHorizontal"
+                        android:id="@+id/bin1Bar" style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:max="100"
-                        android:progress="45"/>
+                        android:max="100" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -199,14 +224,11 @@
                         android:text="Non-Residual"/>
 
                     <ProgressBar
-                        android:id="@+id/bin2Bar"
-                        style="?android:attr/progressBarStyleHorizontal"
+                        android:id="@+id/bin2Bar" style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:max="100"
-                        android:progress="20"/>
-
+                        android:max="100" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -226,14 +248,11 @@
                         android:text="Recyclable"/>
 
                     <ProgressBar
-                        android:id="@+id/bin3Bar"
-                        style="?android:attr/progressBarStyleHorizontal"
+                        android:id="@+id/bin3Bar" style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:max="100"
-                        android:progress="80"/>
-
+                        android:max="100" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

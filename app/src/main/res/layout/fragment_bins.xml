@@ -2,20 +2,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F5F5F5">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Notifications"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#1B5E20" />
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp"
+    android:text="Notifications"
+    android:textSize="24sp"
+    android:textStyle="bold"
+    android:textColor="#2E7D32"/>
+
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/notificationsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="12dp" />
+    android:id="@+id/notificationsRecyclerView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="80dp"/>
 
 </LinearLayout>
