@@ -1,6 +1,5 @@
 package com.example.wastesegregationapp
 
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +13,7 @@ class MonthlyReportAdapter(private val reports: List<MonthlyReport>) :
 
     class ReportViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val monthTextView: TextView = itemView.findViewById(R.id.text_month_name)
+        val fillCountTextView: TextView = itemView.findViewById(R.id.text_fill_count) // Add this to your XML
         val viewButton: Button = itemView.findViewById(R.id.button_view_report)
     }
 
@@ -28,9 +28,12 @@ class MonthlyReportAdapter(private val reports: List<MonthlyReport>) :
 
         holder.monthTextView.text = "${report.monthName.uppercase()} ${report.year}"
 
+        // Display the analytics data
+        holder.fillCountTextView.text = "Full Capacity reached: ${report.fillCount} times"
+
         holder.viewButton.setOnClickListener {
             Toast.makeText(holder.itemView.context,
-                "Viewing report for ${report.monthName}",
+                "Viewing detailed analytics for ${report.monthName}",
                 Toast.LENGTH_SHORT).show()
         }
     }

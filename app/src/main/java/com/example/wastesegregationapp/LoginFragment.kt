@@ -31,7 +31,6 @@ class LoginFragment : Fragment() {
     private lateinit var otpContainer: View
     private lateinit var submitOtpButton: Button
     private lateinit var resendCodeText: TextView
-
     private val PASSWORD_REQUIREMENTS =
         "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#\$%^&+=.\\-_*/()<>,?]).{8,}\$".toRegex()
 
@@ -74,23 +73,25 @@ class LoginFragment : Fragment() {
         resendCodeText = view.findViewById(R.id.textResendCode)
 
         // Button Listeners
+// Button Listeners
         createAccountButton.setOnClickListener {
             handleSignUp()
         }
 
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
-//            if (email.isEmpty()) {
-//                Toast.makeText(requireContext(),
-//                    "Please enter your email first",
-//                    Toast.LENGTH_SHORT).show()
-//            } else {
-//                checkEmailAndProceed(email)
-//            }
-//        }
-            Log.d("Login", "Bypassing login for offline 2026 testing.")
-            mainActivity?.saveLoginState(true) // Saves the 'Logged In' state
-            mainActivity?.navigateToHome()    // Moves you to the Dashboard
+            val password = passwordEditText.text.toString().trim()
+
+            if (email.isEmpty()) {
+                Toast.makeText(requireContext(), "Please enter your email", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (password.isEmpty()) {
+                Toast.makeText(requireContext(), "Please enter your password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            checkEmailAndProceed(email)
         }
 
         submitOtpButton.setOnClickListener {

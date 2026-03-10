@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.Spinner
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,12 +18,14 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ReportsFragment : Fragment() {
 
-    private var barChart: BarChart? = null // Using nullable to prevent crashes
+    private var barChart: BarChart? = null
+    private val dbUrl = "https://wise-wastee-default-rtdb.asia-southeast1.firebasedatabase.app"
 
     private val WASTE_LABELS = listOf("Non-Residual", "Residual", "Recyclable")
     private val WASTE_COLORS = listOf(
@@ -44,7 +45,7 @@ class ReportsFragment : Fragment() {
 
         barChart?.let {
             setupBarChartStyle(it)
-            loadBarChartData(it)
+            loadRealFirebaseData(it)
         }
 
         val yearSpinner: Spinner = view.findViewById(R.id.year_spinner)
@@ -68,47 +69,75 @@ class ReportsFragment : Fragment() {
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.setDrawGridLines(false)
         xAxis.granularity = 1f
-        xAxis.labelRotationAngle = -45f // Rotate labels to prevent overlap
+        xAxis.setCenterAxisLabels(true)
         xAxis.valueFormatter = IndexAxisValueFormatter(getDynamicDayLabels())
+        xAxis.axisMinimum = 0f
+        xAxis.axisMaximum = 7f
 
         val leftAxis = chart.axisLeft
-        leftAxis.setDrawGridLines(false) // Cleaner look
+        leftAxis.setDrawGridLines(true)
         leftAxis.axisMinimum = 0f
+        leftAxis.axisMaximum = 105f
         leftAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String = "${value.toInt()}kg"
+            override fun getFormattedValue(value: Float): String = "${value.toInt()}%"
         }
         chart.axisRight.isEnabled = false
 
         val l = chart.legend
         l.verticalAlignment = Legend.LegendVerticalAlignment.TOP
-        l.horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
-        l.orientation = Legend.LegendOrientation.VERTICAL
-        l.setDrawInside(true)
+        l.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
+        l.orientation = Legend.LegendOrientation.HORIZONTAL
+        l.setDrawInside(false)
+        l.yOffset = 5f
+        l.xOffset = 0f
+        l.textSize = 12f
     }
 
-    private fun loadBarChartData(chart: BarChart) {
-        val entries = mutableListOf<BarEntry>()
+    private fun loadRealFirebaseData(chart: BarChart) {
+        val reportsRef = FirebaseDatabase.getInstance(dbUrl).getReference("reports")
+        val calendar = Calendar.getInstance()
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-        for (i in 0 until 7) {
-            val val1 = (20..50).random().toFloat()
-            val val2 = (30..60).random().toFloat()
-            val val3 = (15..40).random().toFloat()
-            entries.add(BarEntry(i.toFloat(), floatArrayOf(val1, val2, val3)))
+        val last7Days = (0..6).map { i ->
+            val tempCal = calendar.clone() as Calendar
+            tempCal.add(Calendar.DAY_OF_YEAR, -(6 - i))
+            sdf.format(tempCal.time)
         }
 
-        val set = BarDataSet(entries, "")
-        set.colors = WASTE_COLORS
-        set.stackLabels = WASTE_LABELS.toTypedArray()
-        set.setDrawValues(false) // Keeps the UI clean
+        reportsRef.get().addOnSuccessListener { snapshot ->
+            val entriesNonRes = mutableListOf<BarEntry>()
+            val entriesRes = mutableListOf<BarEntry>()
+            val entriesRecyc = mutableListOf<BarEntry>()
 
-        val data = BarData(set)
-        data.barWidth = 0.5f
+            for (i in last7Days.indices) {
+                val dateKey = last7Days[i]
+                val dayData = snapshot.child(dateKey)
 
-        chart.data = data
-        chart.setFitBars(true)
-        chart.invalidate()
+                val res = dayData.child("residual_max").getValue(Int::class.java)?.toFloat() ?: 0f
+                val nonRes = dayData.child("non_residual_max").getValue(Int::class.java)?.toFloat() ?: 0f
+                val rec = dayData.child("recyclable_max").getValue(Int::class.java)?.toFloat() ?: 0f
+                entriesNonRes.add(BarEntry(i.toFloat(), nonRes))
+                entriesRes.add(BarEntry(i.toFloat(), res))
+                entriesRecyc.add(BarEntry(i.toFloat(), rec))
+            }
+
+            val set1 = BarDataSet(entriesNonRes, "Non-Residual").apply { color = WASTE_COLORS[0] }
+            val set2 = BarDataSet(entriesRes, "Residual").apply { color = WASTE_COLORS[1] }
+            val set3 = BarDataSet(entriesRecyc, "Recyclable").apply { color = WASTE_COLORS[2] }
+            val data = BarData(set1, set2, set3)
+            val groupSpace = 0.16f
+            val barSpace = 0.05f
+            val barWidth = 0.23f
+
+            data.barWidth = barWidth
+            chart.data = data
+            chart.groupBars(0f, groupSpace, barSpace)
+            chart.xAxis.axisMinimum = 0f
+            chart.xAxis.axisMaximum = 0f + chart.barData.getGroupWidth(groupSpace, barSpace) * 7
+
+            chart.invalidate()
+        }
     }
-
     private fun getDynamicDayLabels(): Array<String> {
         val labels = mutableListOf<String>()
         val calendar = Calendar.getInstance()
@@ -124,11 +153,27 @@ class ReportsFragment : Fragment() {
 
     private fun setupMonthlyReports(year: String) {
         val recyclerView: RecyclerView = requireView().findViewById(R.id.monthly_reports_recycler)
-        val months = listOf("January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December")
-        val monthlyData = months.map { MonthlyReport(it, year) }
+        val reportsRef = FirebaseDatabase.getInstance(dbUrl).getReference("reports")
 
-        recyclerView.layoutManager = LinearLayoutManager(context)
-        recyclerView.adapter = MonthlyReportAdapter(monthlyData)
+        reportsRef.get().addOnSuccessListener { snapshot ->
+            val months = listOf("January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December")
+
+            val monthlyData = months.mapIndexed { index, name ->
+                val monthNum = String.format("%02d", index + 1)
+                var overflowCount = 0
+
+                for (daySnapshot in snapshot.children) {
+                    if (daySnapshot.key?.startsWith("$year-$monthNum") == true) {
+                        val max = daySnapshot.child("residual_max").getValue(Int::class.java) ?: 0
+                        if (max >= 90) overflowCount++
+                    }
+                }
+                MonthlyReport(name, year, overflowCount)
+              }
+
+            recyclerView.layoutManager = LinearLayoutManager(context)
+            recyclerView.adapter = MonthlyReportAdapter(monthlyData)
+        }
     }
 }

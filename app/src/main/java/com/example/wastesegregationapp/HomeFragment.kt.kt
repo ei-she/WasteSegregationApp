@@ -1,5 +1,7 @@
 package com.example.wastesegregationapp
 
+import android.animation.ObjectAnimator
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -10,25 +12,24 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
-import com.github.mikephil.charting.charts.BarChart
-import kotlinx.coroutines.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
-import androidx.lifecycle.lifecycleScope
+import com.google.firebase.database.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HomeFragment : Fragment() {
 
     private lateinit var bin1Bar: ProgressBar
     private lateinit var bin2Bar: ProgressBar
     private lateinit var bin3Bar: ProgressBar
-    private lateinit var logoutButton: Button
-    private lateinit var warningText: TextView
-    private lateinit var handler: Handler
+    private lateinit var warningIconRes: ImageView
+    private lateinit var warningIconNonRes: ImageView
+    private lateinit var warningIconRecyc: ImageView
     private lateinit var tipText: TextView
-    private val espUrl = "http://192.168.2.111/data"
+    private lateinit var handler: Handler
+    private lateinit var database: DatabaseReference
 
     private val segregationTips = listOf(
         "Rinse plastic containers before throwing them in the Recyclable bin.",
@@ -40,8 +41,7 @@ class HomeFragment : Fragment() {
         "Batteries and electronics are hazardous; don't put them in regular bins!"
     )
 
-    private val client = OkHttpClient()
-    private val updateInterval = 4000L // 4 Seconds
+    private val tipUpdateInterval = 10000L
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,91 +53,105 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize Views
         bin1Bar = view.findViewById(R.id.bin1Bar)
         bin2Bar = view.findViewById(R.id.bin2Bar)
         bin3Bar = view.findViewById(R.id.bin3Bar)
-        warningText = view.findViewById(R.id.warningText)
-        logoutButton = view.findViewById(R.id.buttonLogout)
-        tipText = view.findViewById(R.id.textSegregationTip) // Fixed initialization
+        warningIconRes = view.findViewById(R.id.warningIconRes)
+        warningIconNonRes = view.findViewById(R.id.warningIconNonRes)
+        warningIconRecyc = view.findViewById(R.id.warningIconRecyc)
+        val logoutButton = view.findViewById<ImageButton>(R.id.buttonLogout)
+        tipText = view.findViewById(R.id.textSegregationTip)
 
         logoutButton.setOnClickListener {
             (activity as? MainActivity)?.logoutUser()
         }
 
+        val dbUrl = "https://wise-wastee-default-rtdb.asia-southeast1.firebasedatabase.app"
+        database = FirebaseDatabase.getInstance(dbUrl).getReference("bins")
+
+        startFirebaseListener()
+
         handler = Handler(Looper.getMainLooper())
-
-        // Start the Live Network Loop
-        startAutoUpdate()
+        startTipRotation()
     }
 
-    private fun startAutoUpdate() {
-        handler.removeCallbacksAndMessages(null)
-        val runnable = object : Runnable {
-            override fun run() {
+    private fun startFirebaseListener() {
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val resLevel = snapshot.child("residual/level").getValue(Int::class.java) ?: 0
+                val nonResLevel = snapshot.child("non_residual/level").getValue(Int::class.java) ?: 0
+                val recycLevel = snapshot.child("recyclable/level").getValue(Int::class.java) ?: 0
+
                 if (isAdded && view != null) {
-                    // 1. Fetch real data from ESP32
-                    fetchData()
+                    updateUI(resLevel, nonResLevel, recycLevel)
 
-                    // 2. Rotate Tips
-                    showRandomTip()
+                    // Only log data when the day actually changes
+                    checkAndSyncDailyReport(resLevel, nonResLevel, recycLevel)
 
-                    handler.postDelayed(this, updateInterval)
+                    updateConnectionStatus(true)
                 }
             }
-        }
-        handler.post(runnable)
+
+            override fun onCancelled(error: DatabaseError) {
+                if (isAdded) updateConnectionStatus(false)
+            }
+        })
     }
 
-    private fun fetchData() {
-        // Using lifecycleScope is safer for Fragments
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val request = Request.Builder().url(espUrl).build()
-                val response = client.newCall(request).execute()
-                val responseBody = response.body?.string()
+    private fun checkAndSyncDailyReport(res: Int, nonRes: Int, recyc: Int) {
+        val prefs = requireActivity().getSharedPreferences("WastePrefs", android.content.Context.MODE_PRIVATE)
+        val lastLoggedDate = prefs.getString("last_logged_date", "") ?: ""
+        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        if (lastLoggedDate.isNotEmpty() && lastLoggedDate != currentDate) {
+            if (res > 10) saveToReports("Residual", res)
+            if (nonRes > 10) saveToReports("Non-Residual", nonRes)
+            if (recyc > 10) saveToReports("Recyclable", recyc)
 
-                if (response.isSuccessful && responseBody != null) {
-                    val json = JSONObject(responseBody)
-                    // Match these keys exactly to what your ESP32 sends
-                    val b1 = json.getInt("bin1")
-                    val b2 = json.getInt("bin2")
-                    val b3 = json.getInt("bin3")
-
-                    withContext(Dispatchers.Main) {
-                        updateUI(b1, b2, b3)
-                        updateConnectionStatus(true)
-                    }
-                } else {
-                    withContext(Dispatchers.Main) { updateConnectionStatus(false) }
-                }
-            } catch (e: Exception) {
-                Log.e("HomeFragment", "Error fetching data", e)
-                withContext(Dispatchers.Main) { updateConnectionStatus(false) }
-            }
+            Log.d("DailyLog", "Successfully synced yesterday's data: $lastLoggedDate")
         }
+        prefs.edit().putString("last_logged_date", currentDate).apply()
+    }
+
+    private fun saveToReports(binName: String, level: Int) {
+        val reportsRef = FirebaseDatabase.getInstance().getReference("reports").push()
+        val reportData = mapOf(
+            "binType" to binName,
+            "fillLevel" to level,
+            "timestamp" to ServerValue.TIMESTAMP,
+            "logType" to "Daily Summary"
+        )
+        reportsRef.setValue(reportData)
     }
 
     private fun updateUI(bin1: Int, bin2: Int, bin3: Int) {
         if (!isAdded || view == null) return
+        setupAnimateAndColor(bin1Bar, bin1)
+        setupAnimateAndColor(bin2Bar, bin2)
+        setupAnimateAndColor(bin3Bar, bin3)
 
-        bin1Bar.progress = bin1
-        bin2Bar.progress = bin2
-        bin3Bar.progress = bin3
+        // Icons show alert at 70% but don't trigger a database report record
+        warningIconRes.visibility = if (bin1 >= 70) View.VISIBLE else View.GONE
+        warningIconNonRes.visibility = if (bin2 >= 70) View.VISIBLE else View.GONE
+        warningIconRecyc.visibility = if (bin3 >= 70) View.VISIBLE else View.GONE
+    }
 
-        val warnings = StringBuilder()
-        // Bin 1: Residual, Bin 2: Non-Residual, Bin 3: Recyclable
-        if (bin1 >= 80) warnings.append("⚠️ Residual Bin is getting full\n")
-        if (bin2 >= 80) warnings.append("⚠️ Non-Residual Bin is getting full\n")
-        if (bin3 >= 80) warnings.append("⚠️ Recyclable Bin is getting full\n")
-
-        if (warnings.isNotEmpty()) {
-            warningText.visibility = View.VISIBLE
-            warningText.text = warnings.toString().trim()
-            warningText.setBackgroundColor(Color.parseColor("#FFF59D"))
-        } else {
-            warningText.visibility = View.GONE
+    private fun updateProgressBarColor(progressBar: ProgressBar, progress: Int) {
+        val color = when {
+            progress >= 90 -> Color.RED
+            progress >= 50 -> Color.parseColor("#FFB300")
+            else -> Color.parseColor("#4CAF50")
         }
+        progressBar.progressTintList = ColorStateList.valueOf(color)
+    }
+
+    private fun setupAnimateAndColor(progressBar: ProgressBar, targetProgress: Int) {
+        val animator = ObjectAnimator.ofInt(progressBar, "progress", progressBar.progress, targetProgress)
+        animator.duration = 500
+        animator.addUpdateListener { animation ->
+            val currentProgress = animation.animatedValue as Int
+            updateProgressBarColor(progressBar, currentProgress)
+        }
+        animator.start()
     }
 
     private fun updateConnectionStatus(online: Boolean) {
@@ -146,28 +160,24 @@ class HomeFragment : Fragment() {
 
         if (online) {
             statusDot?.setBackgroundColor(Color.GREEN)
-            statusText?.text = "Online"
-            statusText?.setTextColor(Color.GREEN)
+            statusText?.text = "Online (Live)"
+            statusText?.setTextColor(Color.BLACK)
         } else {
-            statusDot?.setBackgroundResource(R.drawable.redstatus_dot)
+            statusDot?.setBackgroundColor(Color.RED)
             statusText?.text = "Offline"
             statusText?.setTextColor(Color.RED)
         }
     }
 
-    private fun showRandomTip() {
-        if (::tipText.isInitialized) {
-            tipText.text = segregationTips.random()
+    private fun startTipRotation() {
+        val runnable = object : Runnable {
+            override fun run() {
+                if (isAdded && view != null) {
+                    tipText.text = segregationTips.random()
+                    handler.postDelayed(this, tipUpdateInterval)
+                }
+            }
         }
+        handler.post(runnable)
     }
-
-    // Keeping your simulation logic here just in case you need to test offline again
-    /*
-    private fun simulateLiveData() {
-        val r1 = (10..95).random()
-        val r2 = (10..95).random()
-        val r3 = (10..95).random()
-        updateUI(r1, r2, r3)
-    }
-    */
 }

@@ -1,17 +1,21 @@
 package com.example.wastesegregationapp
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Context
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-
+import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity : AppCompatActivity() {
     private val PREFS_FILE = "WiseWastePrefs"
@@ -20,10 +24,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val database = FirebaseDatabase.getInstance("https://wise-wastee-default-rtdb.asia-southeast1.firebasedatabase.app")
+        database.setPersistenceEnabled(true)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         bottomNav = findViewById(R.id.bottom_navigation)
+
+        createNotificationChannel()
+
+        checkNotificationPermission()
 
         if (savedInstanceState == null) {
             if (isUserLoggedIn()) {
@@ -31,6 +42,29 @@ class MainActivity : AppCompatActivity() {
             } else {
                 replaceFragment(LoginFragment())
                 bottomNav.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Bin Alerts"
+            val descriptionText = "Notifications for full waste bins"
+            val importance = android.app.NotificationManager.IMPORTANCE_HIGH
+            val channel = android.app.NotificationChannel("BIN_FULL_NOTIF", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: android.app.NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
             }
         }
     }
@@ -54,8 +88,8 @@ class MainActivity : AppCompatActivity() {
     fun logoutUser() {
         Log.d("Logout", "User is logging out.")
 
+        stopService(Intent(this, BinMonitoringService::class.java))
         FirebaseAuth.getInstance().signOut()
-
         saveLoginState(false)
 
         val loginFragment = LoginFragment()
@@ -64,14 +98,15 @@ class MainActivity : AppCompatActivity() {
             .commit()
 
         bottomNav.visibility = View.GONE
-
         Toast.makeText(this, "Logged out successfully.", Toast.LENGTH_SHORT).show()
     }
 
     private fun loadHomeDashboard() {
         bottomNav.visibility = View.VISIBLE
-
         replaceFragment(HomeFragment())
+
+        val serviceIntent = Intent(this, BinMonitoringService::class.java)
+        startService(serviceIntent)
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -80,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_bins -> {
-                    replaceFragment(BinsFragment())
+                    replaceFragment(NotificationFragment())
                     true
                 }
                 R.id.navigation_reports -> {
