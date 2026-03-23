@@ -37,7 +37,7 @@
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/logo"
+                    android:src="@drawable/lastupd"
                     android:contentDescription="@string/logo_desc" />
 
                 <TextView
@@ -64,6 +64,7 @@
                     android:layout_marginBottom="24dp"
                     android:text="@string/login_header"
                     android:textSize="24sp"
+
                     android:textStyle="bold" />
 
                 <EditText

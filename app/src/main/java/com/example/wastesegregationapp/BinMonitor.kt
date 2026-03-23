@@ -18,97 +18,108 @@ class BinMonitoringService : Service() {
 
     private val REQUIRED_CONFIRMATIONS = 1
 
-    private var lastLevelRes = 0
-    private var lastLevelNonRes = 0
-    private var lastLevelRecyc = 0
+    private var lastLevelRes = -1
+    private var lastLevelNonRes = -1
+    private var lastLevelRecyc = -1
+
+    private var lastSavedRes = -1
+    private var lastSavedNonRes = -1
+    private var lastSavedRecyc = -1
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val dbRef = FirebaseDatabase.getInstance(dbUrl).getReference("bins")
 
-        //RESIDUAL
+        // --- RESIDUAL ---
         dbRef.child("residual/level").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val level = snapshot.getValue(Int::class.java) ?: 0
-
-                if (level > 0 && (lastLevelRes == 0 || Math.abs(level - lastLevelRes) <= 2)) {
+                if (lastLevelRes == -1 || Math.abs(level - lastLevelRes) <= 10) {
                     confirmationCountRes++
-
                     if (confirmationCountRes >= REQUIRED_CONFIRMATIONS) {
-                        logDailyData(level, "residual")
-
+                        // Using a 3% threshold to prevent storage spam while catching 0% drops
+                        if (Math.abs(level - lastSavedRes) >= 3) {
+                            logData(level, "Residual")
+                            lastSavedRes = level
+                        }
                         if (level >= 90 && lastLevelRes < 90) {
                             sendNotification("Residual Bin Full!", level, 101)
                             saveNotificationToFirebase("Residual", level)
                         }
-
                         confirmationCountRes = REQUIRED_CONFIRMATIONS
                     }
-                } else {
-                    confirmationCountRes = 0
-                }
-
+                } else { confirmationCountRes = 0 }
                 lastLevelRes = level
             }
             override fun onCancelled(error: DatabaseError) {}
         })
 
-        //  NON-RESIDUAL
+        // --- NON-RESIDUAL ---
         dbRef.child("non_residual/level").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val level = snapshot.getValue(Int::class.java) ?: 0
-
-                if (level > 0 && (lastLevelNonRes == 0 || Math.abs(level - lastLevelNonRes) <= 2)) {
+                if (lastLevelNonRes == -1 || Math.abs(level - lastLevelNonRes) <= 10) {
                     confirmationCountNonRes++
-
                     if (confirmationCountNonRes >= REQUIRED_CONFIRMATIONS) {
-                        logDailyData(level, "non_residual")
-
+                        if (Math.abs(level - lastSavedNonRes) >= 3) {
+                            logData(level, "Non-Residual")
+                            lastSavedNonRes = level
+                        }
                         if (level >= 90 && lastLevelNonRes < 90) {
                             sendNotification("Non-Residual Bin Full!", level, 102)
                             saveNotificationToFirebase("Non-Residual", level)
                         }
-
                         confirmationCountNonRes = REQUIRED_CONFIRMATIONS
                     }
-                } else {
-                    confirmationCountNonRes = 0
-                }
-
+                } else { confirmationCountNonRes = 0 }
                 lastLevelNonRes = level
             }
             override fun onCancelled(error: DatabaseError) {}
         })
 
-        //RECYCLABLE
+        // --- RECYCLABLE ---
         dbRef.child("recyclable/level").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val level = snapshot.getValue(Int::class.java) ?: 0
-
-                if (level > 0 && (lastLevelRecyc == 0 || Math.abs(level - lastLevelRecyc) <= 2)) {
+                if (lastLevelRecyc == -1 || Math.abs(level - lastLevelRecyc) <= 10) {
                     confirmationCountRecyc++
-
                     if (confirmationCountRecyc >= REQUIRED_CONFIRMATIONS) {
-                        logDailyData(level, "recyclable")
-
+                        if (Math.abs(level - lastSavedRecyc) >= 3) {
+                            logData(level, "Recyclable")
+                            lastSavedRecyc = level
+                        }
                         if (level >= 90 && lastLevelRecyc < 90) {
                             sendNotification("Recyclable Bin Full!", level, 103)
                             saveNotificationToFirebase("Recyclable", level)
                         }
-
                         confirmationCountRecyc = REQUIRED_CONFIRMATIONS
                     }
-                } else {
-                    confirmationCountRecyc = 0
-                }
-
+                } else { confirmationCountRecyc = 0 }
                 lastLevelRecyc = level
             }
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("Firebase Check", "Recyclable Error: ${error.message}")
-            }
+            override fun onCancelled(error: DatabaseError) {}
         })
 
         return START_STICKY
+    }
+
+    private fun logData(level: Int, binType: String) {
+        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val currentDate = sdfDate.format(Date())
+        val currentTime = sdfTime.format(Date())
+
+        val reportRef = FirebaseDatabase.getInstance(dbUrl)
+            .getReference("reports")
+            .child(currentDate)
+            .child(currentTime + "_" + binType)
+
+        val reportData = mapOf(
+            "binType" to binType,
+            "fillLevel" to level,
+            "timestamp" to currentTime
+        )
+
+        reportRef.setValue(reportData)
     }
 
     private fun saveNotificationToFirebase(binType: String, level: Int) {
@@ -120,19 +131,6 @@ class BinMonitoringService : Service() {
             "timestamp" to timestamp
         )
         notifRef.setValue(notificationData)
-    }
-
-    private fun logDailyData(level: Int, binType: String) {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val currentDate = sdf.format(Date())
-        val reportRef = FirebaseDatabase.getInstance(dbUrl).getReference("reports").child(currentDate).child("${binType}_max")
-
-        reportRef.get().addOnSuccessListener { snapshot ->
-            val currentMax = snapshot.getValue(Int::class.java) ?: 0
-            if (level > currentMax) {
-                reportRef.setValue(level)
-            }
-        }
     }
 
     @android.annotation.SuppressLint("MissingPermission")

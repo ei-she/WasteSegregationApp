@@ -29,7 +29,7 @@
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/logo"
+                android:src="@drawable/lastupd"
                 android:contentDescription="Logo" />
 
             <TextView
@@ -198,11 +198,23 @@
                 android:id="@+id/iconRes"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/cc"
+                android:src="@drawable/rr"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 />
+
+            <TextView
+                android:id="@+id/tvPercentageRes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textColor="@android:color/black"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginEnd="8dp"/>
 
             <TextView
                 android:id="@+id/labelRes"
@@ -258,11 +270,23 @@
             android:layout_height="wrap_content"
             android:padding="16dp">
 
+            <TextView
+                android:id="@+id/tvPercentageNonRes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textColor="@android:color/black"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginEnd="8dp"/>
+
             <ImageView
                 android:id="@+id/iconNonRes"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/non_cc"
+                android:src="@drawable/nonr"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>
@@ -322,11 +346,23 @@
             android:layout_height="wrap_content"
             android:padding="16dp">
 
+            <TextView
+                android:id="@+id/tvPercentageRecyc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textColor="@android:color/black"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginEnd="8dp"/>
+
             <ImageView
                 android:id="@+id/iconRecyc"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/recycle_bin"
+                android:src="@drawable/ecyc"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>

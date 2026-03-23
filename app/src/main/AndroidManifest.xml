@@ -7,9 +7,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/app_wasteicon"
+        android:icon="@mipmap/last_updicon"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/app_wasteicon_round"
+        android:roundIcon="@mipmap/last_updicon"
         android:supportsRtl="true"
         android:theme="@style/Theme.WasteSegregationApp"
         android:usesCleartextTraffic="true">

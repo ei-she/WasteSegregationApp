@@ -29,7 +29,7 @@ class MonthlyReportAdapter(private val reports: List<MonthlyReport>) :
         holder.monthTextView.text = "${report.monthName.uppercase()} ${report.year}"
 
         // Display the analytics data
-        holder.fillCountTextView.text = "Full Capacity reached: ${report.fillCount} times"
+        holder.fillCountTextView.text = "Full Capacity reached: ${report.overflowCount} times"
 
         holder.viewButton.setOnClickListener {
             Toast.makeText(holder.itemView.context,
