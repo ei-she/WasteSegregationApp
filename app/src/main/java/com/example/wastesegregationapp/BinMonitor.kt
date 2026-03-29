@@ -10,23 +10,18 @@ import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.*
 
-class BinMonitoringService : Service() {
+class BinMonitor : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
-    private var lastLevelRes = -1
-    private var lastLevelNonRes = -1
-    private var lastLevelRecyc = -1
-
-    // Poll every 5 seconds (Fast enough for defense, slow enough for battery)
-    private val pollingInterval = 5000L
+    private var lastBio = -1
+    private var lastNon = -1
+    private var lastMix = -1
 
     private val monitorRunnable = object : Runnable {
         override fun run() {
-            fetchBinLevels()
-            handler.postDelayed(this, pollingInterval)
+            fetchLevels()
+            handler.postDelayed(this, 5000)
         }
     }
 
@@ -35,71 +30,38 @@ class BinMonitoringService : Service() {
         return START_STICKY
     }
 
-    private fun fetchBinLevels() {
+    private fun fetchLevels() {
         val queue = Volley.newRequestQueue(this)
-        // This URL points to your Pi (from config.kt)
-        val url = config.BASE_URL + "get_bin_status.php"
+        // Ensure config.GET_DATA_URL points to get_bins.php on your Pi
+        val url = config.GET_DATA_URL
 
-        val stringRequest = StringRequest(Request.Method.GET, url,
+        val request = StringRequest(Request.Method.GET, url,
             { response ->
                 try {
                     val json = JSONObject(response)
-                    checkBin("Residual", json.getInt("residual"), 101)
-                    checkBin("Non-Residual", json.getInt("non_residual"), 102)
-                    checkBin("Recyclable", json.getInt("recyclable"), 103)
+                    // Convert String "21" to Int 21
+                    val bio = json.optString("bio", "0").toIntOrNull() ?: 0
+                    val non = json.optString("non", "0").toIntOrNull() ?: 0
+                    val mix = json.optString("mix", "0").toIntOrNull() ?: 0
+
+                    Log.d("BinMonitor", "Data Received: Bio=$bio, Non=$non, Mix=$mix")
+
+                    // Update tracked levels
+                    lastBio = bio
+                    lastNon = non
+                    lastMix = mix
                 } catch (e: Exception) {
-                    Log.e("BinMonitor", "JSON Parsing error: ${e.message}")
+                    Log.e("BinMonitor", "Parse Error: ${e.message}")
                 }
             },
-            { error -> Log.e("BinMonitor", "Server unreachable: ${error.message}") }
+            { Log.e("BinMonitor", "Network Error") }
         )
-        queue.add(stringRequest)
+        queue.add(request)
     }
 
-    private fun checkBin(type: String, currentLevel: Int, id: Int) {
-        val lastLevel = when(type) {
-            "Residual" -> lastLevelRes
-            "Non-Residual" -> lastLevelNonRes
-            else -> lastLevelRecyc
-        }
-
-        // Trigger notification if bin crosses 90%
-        if (currentLevel >= 90 && lastLevel < 90) {
-            sendNotification("$type Bin Full!", currentLevel, id)
-        }
-
-        // Update trackers
-        when(type) {
-            "Residual" -> lastLevelRes = currentLevel
-            "Non-Residual" -> lastLevelNonRes = currentLevel
-            "Recyclable" -> lastLevelRecyc = currentLevel
-        }
-    }
-
-    // Keep your existing sendNotification function here...
-    @android.annotation.SuppressLint("MissingPermission")
-    private fun sendNotification(title: String, level: Int, notificationId: Int) {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val pendingIntent = android.app.PendingIntent.getActivity(this, notificationId, intent, android.app.PendingIntent.FLAG_IMMUTABLE)
-
-        val builder = androidx.core.app.NotificationCompat.Builder(this, "BIN_FULL_NOTIF")
-            .setSmallIcon(R.drawable.alert) // Make sure this icon exists!
-            .setContentTitle(title)
-            .setContentText("The bin is at $level%. Please empty it.")
-            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-
-        val notificationManager = androidx.core.app.NotificationManagerCompat.from(this)
-        notificationManager.notify(notificationId, builder.build())
-    }
-
+    override fun onBind(intent: Intent?): IBinder? = null
     override fun onDestroy() {
         handler.removeCallbacks(monitorRunnable)
         super.onDestroy()
     }
-
-    override fun onBind(intent: Intent?): IBinder? = null
 }

@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
     fun logoutUser() {
         Log.d("Logout", "User is logging out.")
 
-        stopService(Intent(this, BinMonitoringService::class.java))
+        stopService(Intent(this, BinMonitor::class.java))
         FirebaseAuth.getInstance().signOut()
         saveLoginState(false)
 
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
         bottomNav.visibility = View.VISIBLE
         replaceFragment(HomeFragment())
 
-        val serviceIntent = Intent(this, BinMonitoringService::class.java)
+        val serviceIntent = Intent(this, BinMonitor::class.java)
         startService(serviceIntent)
 
         bottomNav.setOnItemSelectedListener { item ->
