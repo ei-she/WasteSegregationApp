@@ -2,137 +2,81 @@ package com.example.wastesegregationapp
 
 import android.app.Service
 import android.content.Intent
+import android.os.Handler
 import android.os.IBinder
-import com.google.firebase.database.*
+import android.os.Looper
+import android.util.Log
+import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
-import android.util.Log
 
 class BinMonitoringService : Service() {
 
-    private val dbUrl = "https://wise-wastee-default-rtdb.asia-southeast1.firebasedatabase.app"
-
-    private var confirmationCountRes = 0
-    private var confirmationCountNonRes = 0
-    private var confirmationCountRecyc = 0
-
-    private val REQUIRED_CONFIRMATIONS = 1
-
+    private val handler = Handler(Looper.getMainLooper())
     private var lastLevelRes = -1
     private var lastLevelNonRes = -1
     private var lastLevelRecyc = -1
 
-    private var lastSavedRes = -1
-    private var lastSavedNonRes = -1
-    private var lastSavedRecyc = -1
+    // Poll every 5 seconds (Fast enough for defense, slow enough for battery)
+    private val pollingInterval = 5000L
+
+    private val monitorRunnable = object : Runnable {
+        override fun run() {
+            fetchBinLevels()
+            handler.postDelayed(this, pollingInterval)
+        }
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val dbRef = FirebaseDatabase.getInstance(dbUrl).getReference("bins")
-
-        // --- RESIDUAL ---
-        dbRef.child("residual/level").addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val level = snapshot.getValue(Int::class.java) ?: 0
-                if (lastLevelRes == -1 || Math.abs(level - lastLevelRes) <= 10) {
-                    confirmationCountRes++
-                    if (confirmationCountRes >= REQUIRED_CONFIRMATIONS) {
-                        // Using a 3% threshold to prevent storage spam while catching 0% drops
-                        if (Math.abs(level - lastSavedRes) >= 3) {
-                            logData(level, "Residual")
-                            lastSavedRes = level
-                        }
-                        if (level >= 90 && lastLevelRes < 90) {
-                            sendNotification("Residual Bin Full!", level, 101)
-                            saveNotificationToFirebase("Residual", level)
-                        }
-                        confirmationCountRes = REQUIRED_CONFIRMATIONS
-                    }
-                } else { confirmationCountRes = 0 }
-                lastLevelRes = level
-            }
-            override fun onCancelled(error: DatabaseError) {}
-        })
-
-        // --- NON-RESIDUAL ---
-        dbRef.child("non_residual/level").addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val level = snapshot.getValue(Int::class.java) ?: 0
-                if (lastLevelNonRes == -1 || Math.abs(level - lastLevelNonRes) <= 10) {
-                    confirmationCountNonRes++
-                    if (confirmationCountNonRes >= REQUIRED_CONFIRMATIONS) {
-                        if (Math.abs(level - lastSavedNonRes) >= 3) {
-                            logData(level, "Non-Residual")
-                            lastSavedNonRes = level
-                        }
-                        if (level >= 90 && lastLevelNonRes < 90) {
-                            sendNotification("Non-Residual Bin Full!", level, 102)
-                            saveNotificationToFirebase("Non-Residual", level)
-                        }
-                        confirmationCountNonRes = REQUIRED_CONFIRMATIONS
-                    }
-                } else { confirmationCountNonRes = 0 }
-                lastLevelNonRes = level
-            }
-            override fun onCancelled(error: DatabaseError) {}
-        })
-
-        // --- RECYCLABLE ---
-        dbRef.child("recyclable/level").addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val level = snapshot.getValue(Int::class.java) ?: 0
-                if (lastLevelRecyc == -1 || Math.abs(level - lastLevelRecyc) <= 10) {
-                    confirmationCountRecyc++
-                    if (confirmationCountRecyc >= REQUIRED_CONFIRMATIONS) {
-                        if (Math.abs(level - lastSavedRecyc) >= 3) {
-                            logData(level, "Recyclable")
-                            lastSavedRecyc = level
-                        }
-                        if (level >= 90 && lastLevelRecyc < 90) {
-                            sendNotification("Recyclable Bin Full!", level, 103)
-                            saveNotificationToFirebase("Recyclable", level)
-                        }
-                        confirmationCountRecyc = REQUIRED_CONFIRMATIONS
-                    }
-                } else { confirmationCountRecyc = 0 }
-                lastLevelRecyc = level
-            }
-            override fun onCancelled(error: DatabaseError) {}
-        })
-
+        handler.post(monitorRunnable)
         return START_STICKY
     }
 
-    private fun logData(level: Int, binType: String) {
-        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val sdfTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        val currentDate = sdfDate.format(Date())
-        val currentTime = sdfTime.format(Date())
+    private fun fetchBinLevels() {
+        val queue = Volley.newRequestQueue(this)
+        // This URL points to your Pi (from config.kt)
+        val url = config.BASE_URL + "get_bin_status.php"
 
-        val reportRef = FirebaseDatabase.getInstance(dbUrl)
-            .getReference("reports")
-            .child(currentDate)
-            .child(currentTime + "_" + binType)
-
-        val reportData = mapOf(
-            "binType" to binType,
-            "fillLevel" to level,
-            "timestamp" to currentTime
+        val stringRequest = StringRequest(Request.Method.GET, url,
+            { response ->
+                try {
+                    val json = JSONObject(response)
+                    checkBin("Residual", json.getInt("residual"), 101)
+                    checkBin("Non-Residual", json.getInt("non_residual"), 102)
+                    checkBin("Recyclable", json.getInt("recyclable"), 103)
+                } catch (e: Exception) {
+                    Log.e("BinMonitor", "JSON Parsing error: ${e.message}")
+                }
+            },
+            { error -> Log.e("BinMonitor", "Server unreachable: ${error.message}") }
         )
-
-        reportRef.setValue(reportData)
+        queue.add(stringRequest)
     }
 
-    private fun saveNotificationToFirebase(binType: String, level: Int) {
-        val notifRef = FirebaseDatabase.getInstance(dbUrl).getReference("notifications").push()
-        val timestamp = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(Date())
-        val notificationData = mapOf(
-            "title" to "$binType Full",
-            "message" to "Bin level reached $level%. Please empty it.",
-            "timestamp" to timestamp
-        )
-        notifRef.setValue(notificationData)
+    private fun checkBin(type: String, currentLevel: Int, id: Int) {
+        val lastLevel = when(type) {
+            "Residual" -> lastLevelRes
+            "Non-Residual" -> lastLevelNonRes
+            else -> lastLevelRecyc
+        }
+
+        // Trigger notification if bin crosses 90%
+        if (currentLevel >= 90 && lastLevel < 90) {
+            sendNotification("$type Bin Full!", currentLevel, id)
+        }
+
+        // Update trackers
+        when(type) {
+            "Residual" -> lastLevelRes = currentLevel
+            "Non-Residual" -> lastLevelNonRes = currentLevel
+            "Recyclable" -> lastLevelRecyc = currentLevel
+        }
     }
 
+    // Keep your existing sendNotification function here...
     @android.annotation.SuppressLint("MissingPermission")
     private fun sendNotification(title: String, level: Int, notificationId: Int) {
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -141,7 +85,7 @@ class BinMonitoringService : Service() {
         val pendingIntent = android.app.PendingIntent.getActivity(this, notificationId, intent, android.app.PendingIntent.FLAG_IMMUTABLE)
 
         val builder = androidx.core.app.NotificationCompat.Builder(this, "BIN_FULL_NOTIF")
-            .setSmallIcon(R.drawable.alert)
+            .setSmallIcon(R.drawable.alert) // Make sure this icon exists!
             .setContentTitle(title)
             .setContentText("The bin is at $level%. Please empty it.")
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
@@ -150,6 +94,11 @@ class BinMonitoringService : Service() {
 
         val notificationManager = androidx.core.app.NotificationManagerCompat.from(this)
         notificationManager.notify(notificationId, builder.build())
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacks(monitorRunnable)
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

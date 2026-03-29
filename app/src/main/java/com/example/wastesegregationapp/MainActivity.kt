@@ -24,9 +24,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        val database = FirebaseDatabase.getInstance("https://wise-wastee-default-rtdb.asia-southeast1.firebasedatabase.app")
-        database.setPersistenceEnabled(true)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 

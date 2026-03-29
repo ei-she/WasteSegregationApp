@@ -1,50 +1,61 @@
 package com.example.wastesegregationapp
 
-    import androidx.lifecycle.LiveData
-    import androidx.lifecycle.MutableLiveData
-    import androidx.lifecycle.ViewModel
-    import androidx.lifecycle.viewModelScope
-    import kotlinx.coroutines.delay
-    import kotlinx.coroutines.launch
-    import kotlinx.coroutines.isActive
-    import kotlinx.coroutines.Dispatchers
-    import com.example.wastesegregationapp.model.Bin
-    class BinDataViewModel : ViewModel() {
+import android.app.Application
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import kotlinx.coroutines.*
+import org.json.JSONObject
 
-        private val _liveBinData = MutableLiveData<List<Bin>>()
+// Use AndroidViewModel so we can access 'application' for Volley
+class BinDataViewModel(application: Application) : AndroidViewModel(application) {
 
-        val liveBinData: LiveData<List<Bin>> = _liveBinData
+    private val _liveBinData = MutableLiveData<Map<String, Int>>()
+    val liveBinData: LiveData<Map<String, Int>> = _liveBinData
 
-        private var isFetchingActive = false
+    private var fetchJob: Job? = null
+    private val requestQueue = Volley.newRequestQueue(application)
 
-        fun startDataFetching() {
-            if (isFetchingActive) return
-            isFetchingActive = true
+    fun startDataFetching() {
+        if (fetchJob?.isActive == true) return
 
-            viewModelScope.launch(Dispatchers.IO) {
-                while (isActive) {
-                    try {
-                        val fetchedList = fetchDataFromEsp()
-                        _liveBinData.postValue(fetchedList)
-
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                    delay(500)
-                }
+        fetchJob = viewModelScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                fetchFromPi()
+                delay(3000) // Poll every 3 seconds
             }
         }
-
-        private fun fetchDataFromEsp(): List<Bin> {
-            return listOf(
-                Bin("Bin 1", "Non - Residual", (0..100).random(), "STATUS_1", R.drawable.non_residual),
-                Bin("Bin 2", "Residual", (0..100).random(), "STATUS_2", R.drawable.compost),
-                Bin("Bin 3", "Recyclable", (0..100).random(), "STATUS_3", R.drawable.recycle_bin),
-            )
-        }
-
-        override fun onCleared() {
-            super.onCleared()
-            isFetchingActive = false
-        }
     }
+
+    private fun fetchFromPi() {
+        val stringRequest = StringRequest(Request.Method.GET, config.GET_DATA_URL,
+            { response ->
+                try {
+                    val json = JSONObject(response)
+                    val dataMap = mapOf(
+                        "residual" to json.getInt("residual"),
+                        "non_residual" to json.getInt("non_residual"),
+                        "recyclable" to json.getInt("recyclable")
+                    )
+                    _liveBinData.postValue(dataMap)
+                } catch (e: Exception) {
+                    Log.e("ViewModel", "JSON Error: ${e.message}")
+                }
+            },
+            { error ->
+                Log.e("ViewModel", "Network Error: ${error.message}")
+            }
+        )
+        requestQueue.add(stringRequest)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        fetchJob?.cancel()
+    }
+}

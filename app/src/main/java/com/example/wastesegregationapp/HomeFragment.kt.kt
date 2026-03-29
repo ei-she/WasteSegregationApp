@@ -12,9 +12,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
-import com.google.firebase.database.*
-import java.text.SimpleDateFormat
-import java.util.*
+import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import org.json.JSONObject
 
 class HomeFragment : Fragment() {
 
@@ -29,18 +30,16 @@ class HomeFragment : Fragment() {
     private lateinit var warningIconRecyc: ImageView
     private lateinit var tipText: TextView
     private lateinit var handler: Handler
-    private lateinit var database: DatabaseReference
 
-    private val dbUrl = "https://wise-wastee-default-rtdb.asia-southeast1.firebasedatabase.app"
+    // Polling Interval: 3 seconds for a very "live" feel during defense
+    private val pollingInterval = 3000L
 
     private val segregationTips = listOf(
         "Rinse plastic containers before throwing them in the Recyclable bin.",
         "Food-stained paper (like pizza boxes) belongs in Residual waste.",
         "Crush plastic bottles and tin cans to save space in your bins.",
-        "Biodegradable waste can be used for composting your garden!",
         "Keep recyclables dry. Wet paper can ruin a whole batch of recycling.",
-        "Check for the recycling symbol on plastics to sort them correctly.",
-        "Batteries and electronics are hazardous; don't put them in regular bins!"
+        "Check for the recycling symbol on plastics to sort them correctly."
     )
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -65,64 +64,54 @@ class HomeFragment : Fragment() {
         view.findViewById<ImageButton>(R.id.buttonLogout).setOnClickListener {
             (activity as? MainActivity)?.logoutUser()
         }
-        database = FirebaseDatabase.getInstance(dbUrl).getReference("bins")
+
         handler = Handler(Looper.getMainLooper())
+
         startTipRotation()
-        startFirebaseListener()
+        startDataPolling() // Replaces startFirebaseListener
     }
 
-    private fun startFirebaseListener() {
-        database.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (!isAdded || view == null) return
-
-                val resLevel = snapshot.child("residual/level").getValue(Int::class.java) ?: 0
-                val nonResLevel = snapshot.child("non_residual/level").getValue(Int::class.java) ?: 0
-                val recycLevel = snapshot.child("recyclable/level").getValue(Int::class.java) ?: 0
-
-                updateUI(resLevel, nonResLevel, recycLevel)
-
-                // IMPORTANT: This triggers the report update immediately
-                handleLiveReporting(resLevel, nonResLevel, recycLevel)
-
-                updateConnectionStatus(true)
+    private fun startDataPolling() {
+        val runnable = object : Runnable {
+            override fun run() {
+                if (isAdded && view != null) {
+                    fetchDataFromPi()
+                    handler.postDelayed(this, pollingInterval)
+                }
             }
-            override fun onCancelled(error: DatabaseError) {
-                if (isAdded) updateConnectionStatus(false)
-            }
-        })
-    }
-
-    private fun handleLiveReporting(res: Int, nonRes: Int, recyc: Int) {
-        // Set to 10 for testing, change to 90 for final submission
-        val threshold = 10
-
-        if (res >= threshold) sendReportToFirebase("Residual", res)
-        if (nonRes >= threshold) sendReportToFirebase("Non-Residual", nonRes)
-        if (recyc >= threshold) sendReportToFirebase("Recyclable", recyc)
-    }
-
-    private fun sendReportToFirebase(binName: String, level: Int) {
-        val dateKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val timeKey = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-        val reportRef = FirebaseDatabase.getInstance(dbUrl).getReference("reports")
-            .child(dateKey)
-            .child("${timeKey}_$binName")
-
-        val data = mapOf(
-            "binType" to binName,
-            "fillLevel" to level,
-            "timestamp" to ServerValue.TIMESTAMP
-        )
-
-        reportRef.setValue(data).addOnSuccessListener {
-            Log.d("LIVE_REPORT", "Sent $binName level ($level%) to graph.")
         }
+        handler.post(runnable)
+    }
+
+    private fun fetchDataFromPi() {
+        // Ensure you have: implementation("com.android.volley:volley:1.2.1") in build.gradle
+        val queue = Volley.newRequestQueue(requireContext())
+
+        val request = StringRequest(Request.Method.GET, config.GET_DATA_URL,
+            { response ->
+                try {
+                    val json = JSONObject(response)
+
+                    // These keys must match your PHP: "residual", "non_residual", "recyclable"
+                    val res = json.getInt("residual")
+                    val nonRes = json.getInt("non_residual")
+                    val recyc = json.getInt("recyclable")
+
+                    updateUI(res, nonRes, recyc)
+                    updateConnectionStatus(true)
+                } catch (e: Exception) {
+                    Log.e("DATA_FETCH", "Parsing error: ${e.message}")
+                }
+            },
+            { error ->
+                Log.e("DATA_FETCH", "Server Unreachable: ${error.message}")
+                updateConnectionStatus(false)
+            }
+        )
+        queue.add(request)
     }
 
     private fun updateUI(bin1: Int, bin2: Int, bin3: Int) {
-        if (!::warningIconRes.isInitialized) return
-
         setupAnimateAndColor(bin1Bar, bin1)
         setupAnimateAndColor(bin2Bar, bin2)
         setupAnimateAndColor(bin3Bar, bin3)
@@ -131,6 +120,7 @@ class HomeFragment : Fragment() {
         tvPercentageNonRes.text = "$bin2%"
         tvPercentageRecyc.text = "$bin3%"
 
+        // Icons appear at 70% capacity
         warningIconRes.visibility = if (bin1 >= 70) View.VISIBLE else View.GONE
         warningIconNonRes.visibility = if (bin2 >= 70) View.VISIBLE else View.GONE
         warningIconRecyc.visibility = if (bin3 >= 70) View.VISIBLE else View.GONE
@@ -156,7 +146,7 @@ class HomeFragment : Fragment() {
         val statusDot = view?.findViewById<View>(R.id.statusDot)
         val statusText = view?.findViewById<TextView>(R.id.statusText)
         statusDot?.setBackgroundColor(if (online) Color.GREEN else Color.RED)
-        statusText?.text = if (online) "Online (Live)" else "Offline"
+        statusText?.text = if (online) "Online (Local Pi)" else "Offline (Check Wi-Fi)"
     }
 
     private fun startTipRotation() {
@@ -169,5 +159,10 @@ class HomeFragment : Fragment() {
             }
         }
         handler.post(runnable)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        handler.removeCallbacksAndMessages(null) // Stop polling when user leaves fragment
     }
 }
