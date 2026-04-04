@@ -40,9 +40,9 @@ class BinMonitor : Service() {
                 try {
                     val json = JSONObject(response)
                     // Convert String "21" to Int 21
-                    val bio = json.optString("bio", "0").toIntOrNull() ?: 0
-                    val non = json.optString("non", "0").toIntOrNull() ?: 0
-                    val mix = json.optString("mix", "0").toIntOrNull() ?: 0
+                    val bio = json.optString("Bio", "0").toIntOrNull() ?: 0
+                    val non = json.optString("Non", "0").toIntOrNull() ?: 0
+                    val mix = json.optString("others", "0").toIntOrNull() ?: 0
 
                     Log.d("BinMonitor", "Data Received: Bio=$bio, Non=$non, Mix=$mix")
 

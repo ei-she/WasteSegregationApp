@@ -93,6 +93,9 @@ class HomeFragment : Fragment() {
 
     private fun fetchDataFromPi() {
         if (!isAdded) return
+
+        // Use a single request queue instance if possible,
+        // but Volley.newRequestQueue(requireContext()) works for testing.
         val queue = Volley.newRequestQueue(requireContext())
 
         val request = StringRequest(Request.Method.GET, config.GET_DATA_URL,
@@ -101,13 +104,21 @@ class HomeFragment : Fragment() {
                     Log.d("BIN_DATA", "Raw Response: $response")
                     val json = JSONObject(response)
 
-                    // Use coerceIn(0, 100) to keep bars within valid range
-                    val bio = json.optInt("bio", 0).coerceIn(0, 100)
-                    val non = json.optInt("non", 0).coerceIn(0, 100)
-                    val mix = json.optInt("mix", 0).coerceIn(0, 100)
+                    // 1. NAVIGATION FIX: Access the "levels" sub-object from your JSON response
+                    if (json.has("levels")) {
+                        val levels = json.getJSONObject("levels")
 
-                    updateUI(bio, non, mix)
-                    updateConnectionStatus(true)
+                        // 2. KEY MATCHING FIX: Use exact keys from MariaDB/Logcat (Bio, Non, others)
+                        val bio = levels.optInt("Bio", 0).coerceIn(0, 100)
+                        val non = levels.optInt("Non", 0).coerceIn(0, 100)
+                        val mix = levels.optInt("others", 0).coerceIn(0, 100)
+
+                        updateUI(bio, non, mix)
+                        updateConnectionStatus(true)
+                    } else {
+                        Log.e("BIN_DATA", "JSON missing 'levels' object")
+                        updateConnectionStatus(false)
+                    }
                 } catch (e: Exception) {
                     Log.e("BIN_DATA", "Parsing Error: ${e.message}")
                     updateConnectionStatus(false)
@@ -153,9 +164,10 @@ class HomeFragment : Fragment() {
 
     private fun updateConnectionStatus(online: Boolean) {
         val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        // Activity might be null if fragment detached, so use activity?.
         activity?.runOnUiThread {
-            statusDot.setBackgroundColor(if (online) Color.GREEN else Color.RED)
-            statusText.text = if (online) "Online - Last Update: $currentTime" else "Offline - Reconnecting..."
+            statusDot?.setBackgroundColor(if (online) Color.GREEN else Color.RED)
+            statusText?.text = if (online) "Online - Last Update: $currentTime" else "Offline - Reconnecting..."
         }
     }
 
@@ -173,6 +185,8 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Stop all pending runnables to prevent memory leaks or crashes
         handler.removeCallbacksAndMessages(null)
     }
+
 }
