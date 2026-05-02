@@ -75,7 +75,7 @@ class ReportsFragment : Fragment() {
                 override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
                     if (!snapshot.exists()) {
                         val staticTime = "23:59:59"
-                        val types = listOf("Residual", "Non-Residual", "Recyclable")
+                        val types = listOf("Biodegradable", "Non-Biodegradable", "Others")
 
                         for (type in types) {
                             val dummyData = mapOf(
@@ -158,9 +158,9 @@ class ReportsFragment : Fragment() {
                             val level = reportSnapshot.child("fillLevel").getValue(Float::class.java) ?: 0f
 
                             when (binType) {
-                                "Residual" -> latestRes = level
-                                "Non-Residual" -> latestNonRes = level
-                                "Recyclable" -> latestRecyc = level
+                                "Biodegradable" -> latestRes = level
+                                "Non-Biodegradable" -> latestNonRes = level
+                                "Others" -> latestRecyc = level
                             }
                         }
                     }
@@ -170,9 +170,9 @@ class ReportsFragment : Fragment() {
                     entriesRecyc.add(BarEntry(i.toFloat(), latestRecyc))
                 }
 
-                val set1 = BarDataSet(entriesNonRes, "Non-Res").apply { color = WASTE_COLORS[0]; setDrawValues(true) }
-                val set2 = BarDataSet(entriesRes, "Residual").apply { color = WASTE_COLORS[1]; setDrawValues(true) }
-                val set3 = BarDataSet(entriesRecyc, "Recyc").apply { color = WASTE_COLORS[2]; setDrawValues(true) }
+                val set1 = BarDataSet(entriesNonRes, "Non-Bio").apply { color = WASTE_COLORS[0]; setDrawValues(true) }
+                val set2 = BarDataSet(entriesRes, "Biodegradable").apply { color = WASTE_COLORS[1]; setDrawValues(true) }
+                val set3 = BarDataSet(entriesRecyc, "Others").apply { color = WASTE_COLORS[2]; setDrawValues(true) }
 
                 val barValueFormatter = object : ValueFormatter() {
                     override fun getFormattedValue(value: Float): String = if (value > 0) "${value.toInt()}%" else ""

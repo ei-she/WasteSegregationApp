@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.android.volley.Request
@@ -56,9 +55,16 @@ class LoginFragment : Fragment() {
             performLocalLogin(username, password)
         }
 
-        // SignUp Button (For now, we point them to the admin account)
+        // SignUp Button - Now directed to the database
         createAccountButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Sign up via Admin Dashboard on Pi", Toast.LENGTH_LONG).show()
+            val username = emailEditText.text.toString().trim()
+            val password = passwordEditText.text.toString().trim()
+
+            if (username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(requireContext(), "Fill in details to register", Toast.LENGTH_SHORT).show()
+            } else {
+                performRegister(username, password)
+            }
         }
 
         return view
@@ -66,25 +72,18 @@ class LoginFragment : Fragment() {
 
     private fun performLocalLogin(user: String, pass: String) {
         val queue = Volley.newRequestQueue(requireContext())
-
-        // Use the URL from your config file
         val url = "${config.BASE_URL}login.php"
 
         val request = object : StringRequest(Request.Method.POST, url,
             { response ->
                 try {
                     val json = JSONObject(response)
-                    val status = json.getString("status")
-
-                    if (status == "success") {
+                    if (json.getString("status") == "success") {
                         Toast.makeText(requireContext(), "Login Successful!", Toast.LENGTH_SHORT).show()
-
-                        // Navigate to Home (Just like your old Firebase code did)
                         mainActivity?.saveLoginState(true)
                         mainActivity?.navigateToHome()
                     } else {
-                        val message = json.getString("message")
-                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), json.getString("message"), Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
                     Log.e("LOGIN_ERROR", "Parsing error: ${e.message}")
@@ -96,7 +95,6 @@ class LoginFragment : Fragment() {
                 Toast.makeText(requireContext(), "Cannot reach Raspberry Pi. Check Wi-Fi.", Toast.LENGTH_LONG).show()
             }) {
 
-            // This is how Volley sends the "POST" data to PHP
             override fun getParams(): Map<String, String> {
                 val params = HashMap<String, String>()
                 params["username"] = user
@@ -104,7 +102,41 @@ class LoginFragment : Fragment() {
                 return params
             }
         }
+        queue.add(request)
+    }
 
+    private fun performRegister(user: String, pass: String) {
+        val queue = Volley.newRequestQueue(requireContext())
+        val url = "${config.BASE_URL}register.php"
+
+        val request = object : StringRequest(Request.Method.POST, url,
+            { response ->
+                try {
+                    val json = JSONObject(response)
+                    if (json.getString("status") == "success") {
+                        Toast.makeText(requireContext(), "Account Created! You can now login.", Toast.LENGTH_LONG).show()
+                        // Optional: Clear fields after successful registration
+                        emailEditText.text.clear()
+                        passwordEditText.text.clear()
+                    } else {
+                        Toast.makeText(requireContext(), json.getString("message"), Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Log.e("REG_ERROR", "Parsing error: ${e.message}")
+                }
+            },
+            { error ->
+                Log.e("REG_ERROR", "Connection failed: ${error.message}")
+                Toast.makeText(requireContext(), "Registration failed. Check connection.", Toast.LENGTH_SHORT).show()
+            }) {
+
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["username"] = user
+                params["password"] = pass
+                return params
+            }
+        }
         queue.add(request)
     }
 }
