@@ -1,16 +1,27 @@
 package com.example.wastesegregationapp
 
+import android.content.ContentValues
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.pdf.PdfDocument
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import android.widget.ImageButton
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonArrayRequest
+import com.android.volley.toolbox.Volley
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
@@ -18,21 +29,21 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import com.github.mikephil.charting.formatter.ValueFormatter
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ServerValue
+import org.json.JSONArray
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ReportsFragment : Fragment() {
 
     private var barChart: BarChart? = null
-    private val dbUrl = "https://wise-wastee-default-rtdb.asia-southeast1.firebasedatabase.app"
+    // Update this IP to match your Raspberry Pi
+    private val reportsUrl = "http://192.168.0.147/waste_api/get_daily_reports.php"
 
     private val WASTE_COLORS = listOf(
-        Color.parseColor("#FFC107"), // Yellow (Non-Res)
-        Color.parseColor("#4CAF50"), // Green (Residual)
-        Color.parseColor("#2196F3")  // Blue (Recyc)
+        Color.parseColor("#4CAF50"), // Green (Bio)
+        Color.parseColor("#F44336"), // Red (Non-Bio)
+        Color.parseColor("#2196F3")  // Blue (Others)
     )
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -42,53 +53,29 @@ class ReportsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         barChart = view.findViewById(R.id.dashboard_bar_chart)
+        val btnExportPdf: ImageButton = view.findViewById(R.id.btnExportPdf)
 
         barChart?.let {
             setupBarChartStyle(it)
-            sendStaticData()
-            loadRealFirebaseData(it)
+            fetchLocalReports(it)
+        }
+
+        btnExportPdf.setOnClickListener {
+            barChart?.let { chart ->
+                if (chart.data != null && chart.data.entryCount > 0) {
+                    exportChartToPdf(chart)
+                } else {
+                    Toast.makeText(requireContext(), "No data to export", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         val yearSpinner: Spinner = view.findViewById(R.id.year_spinner)
         yearSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                val selectedYear = parent.getItemAtPosition(position).toString()
-                setupMonthlyReports(selectedYear)
+                barChart?.let { fetchLocalReports(it) }
             }
             override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
-    }
-
-    private fun sendStaticData() {
-        val reportsRef = FirebaseDatabase.getInstance(dbUrl).getReference("reports")
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("GMT+8")
-        }
-
-        // Seeding 6 days ago up to yesterday
-        for (i in 0..5) {
-            val tempCal = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"))
-            tempCal.add(Calendar.DAY_OF_YEAR, -(6 - i))
-            val pastDate = sdf.format(tempCal.time)
-
-            reportsRef.child(pastDate).addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
-                override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-                    if (!snapshot.exists()) {
-                        val staticTime = "23:59:59"
-                        val types = listOf("Residual", "Non-Residual", "Recyclable")
-
-                        for (type in types) {
-                            val dummyData = mapOf(
-                                "binType" to type,
-                                "fillLevel" to (20..65).random().toFloat(),
-                                "timestamp" to ServerValue.TIMESTAMP
-                            )
-                            reportsRef.child(pastDate).child("${staticTime}_$type").setValue(dummyData)
-                        }
-                    }
-                }
-                override fun onCancelled(error: com.google.firebase.database.DatabaseError) {}
-            })
         }
     }
 
@@ -96,7 +83,6 @@ class ReportsFragment : Fragment() {
         chart.description.isEnabled = false
         chart.setDrawGridBackground(false)
         chart.setDrawBarShadow(false)
-        chart.setDrawValueAboveBar(true)
         chart.animateY(1000)
 
         val xAxis = chart.xAxis
@@ -104,139 +90,135 @@ class ReportsFragment : Fragment() {
         xAxis.setDrawGridLines(false)
         xAxis.granularity = 1f
         xAxis.setCenterAxisLabels(true)
-        xAxis.valueFormatter = IndexAxisValueFormatter(getDynamicDayLabels())
+
         xAxis.axisMinimum = 0f
         xAxis.axisMaximum = 7f
 
-        val leftAxis = chart.axisLeft
-        leftAxis.setDrawGridLines(true)
-        leftAxis.axisMinimum = 0f
-        leftAxis.axisMaximum = 110f
-        leftAxis.setLabelCount(6, true)
-        leftAxis.valueFormatter = object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String = "${value.toInt()}%"
-        }
+        chart.axisLeft.axisMinimum = 0f
         chart.axisRight.isEnabled = false
-
-        val l = chart.legend
-        l.verticalAlignment = Legend.LegendVerticalAlignment.TOP
-        l.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-        l.orientation = Legend.LegendOrientation.HORIZONTAL
-        l.setDrawInside(false)
-        l.yOffset = 5f
-        l.textSize = 10f
+        chart.legend.verticalAlignment = Legend.LegendVerticalAlignment.TOP
+        chart.legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
     }
 
-    private fun loadRealFirebaseData(chart: BarChart) {
-        val reportsRef = FirebaseDatabase.getInstance(dbUrl).getReference("reports")
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("GMT+8")
-        }
+    private fun fetchLocalReports(chart: BarChart) {
+        val queue = Volley.newRequestQueue(requireContext())
 
-        val last7Days = (0..6).map { i ->
-            val tempCal = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"))
-            tempCal.add(Calendar.DAY_OF_YEAR, -(6 - i))
-            sdf.format(tempCal.time)
-        }
-
-        reportsRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
-            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-                val entriesNonRes = mutableListOf<BarEntry>()
-                val entriesRes = mutableListOf<BarEntry>()
-                val entriesRecyc = mutableListOf<BarEntry>()
-
-                for (i in last7Days.indices) {
-                    val targetDate = last7Days[i]
-                    var latestRes = 0f
-                    var latestNonRes = 0f
-                    var latestRecyc = 0f
-
-                    val dayFolder = snapshot.child(targetDate)
-                    if (dayFolder.exists()) {
-                        for (reportSnapshot in dayFolder.children) {
-                            val binType = reportSnapshot.child("binType").getValue(String::class.java) ?: ""
-                            val level = reportSnapshot.child("fillLevel").getValue(Float::class.java) ?: 0f
-
-                            when (binType) {
-                                "Residual" -> latestRes = level
-                                "Non-Residual" -> latestNonRes = level
-                                "Recyclable" -> latestRecyc = level
-                            }
-                        }
-                    }
-
-                    entriesNonRes.add(BarEntry(i.toFloat(), latestNonRes))
-                    entriesRes.add(BarEntry(i.toFloat(), latestRes))
-                    entriesRecyc.add(BarEntry(i.toFloat(), latestRecyc))
-                }
-
-                val set1 = BarDataSet(entriesNonRes, "Non-Res").apply { color = WASTE_COLORS[0]; setDrawValues(true) }
-                val set2 = BarDataSet(entriesRes, "Residual").apply { color = WASTE_COLORS[1]; setDrawValues(true) }
-                val set3 = BarDataSet(entriesRecyc, "Recyc").apply { color = WASTE_COLORS[2]; setDrawValues(true) }
-
-                val barValueFormatter = object : ValueFormatter() {
-                    override fun getFormattedValue(value: Float): String = if (value > 0) "${value.toInt()}%" else ""
-                }
-                set1.valueFormatter = barValueFormatter
-                set2.valueFormatter = barValueFormatter
-                set3.valueFormatter = barValueFormatter
-
-                val data = BarData(set1, set2, set3)
-                data.barWidth = 0.20f
-                chart.data = data
-                chart.groupBars(0f, 0.31f, 0.03f)
-                chart.notifyDataSetChanged()
-                chart.invalidate()
+        val request = JsonArrayRequest(Request.Method.GET, reportsUrl, null,
+            { response ->
+                updateChartData(chart, response)
+            },
+            { error ->
+                Log.e("REPORTS_ERR", "Volley Error: ${error.message}")
             }
-
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {}
-        })
+        )
+        queue.add(request)
     }
 
-    private fun getDynamicDayLabels(): Array<String> {
+    private fun updateChartData(chart: BarChart, response: JSONArray) {
+        val entriesBio = mutableListOf<BarEntry>()
+        val entriesNonBio = mutableListOf<BarEntry>()
+        val entriesOthers = mutableListOf<BarEntry>()
         val labels = mutableListOf<String>()
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"))
-        val dateFormat = SimpleDateFormat("MM/dd", Locale.US)
 
-        for (i in 0 until 7) {
-            val tempCal = calendar.clone() as Calendar
-            tempCal.add(Calendar.DAY_OF_YEAR, -(6 - i))
-            labels.add(dateFormat.format(tempCal.time))
+        if (response.length() == 0) {
+            chart.clear()
+            chart.setNoDataText("No waste data recorded for this week yet.")
+            chart.invalidate()
+            return
         }
-        return labels.toTypedArray()
+
+        for (i in 0 until response.length()) {
+            val obj = response.getJSONObject(i)
+            val dateStr = obj.optString("report_date", "2026-01-01")
+
+            val outFormat = SimpleDateFormat("MM/dd", Locale.US)
+            val inFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val date = inFormat.parse(dateStr) ?: Date()
+            labels.add(outFormat.format(date))
+
+            entriesBio.add(BarEntry(i.toFloat(), obj.optInt("bio_count", 0).toFloat()))
+            entriesNonBio.add(BarEntry(i.toFloat(), obj.optInt("non_bio_count", 0).toFloat()))
+            entriesOthers.add(BarEntry(i.toFloat(), obj.optInt("others_count", 0).toFloat()))
+        }
+
+        val set1 = BarDataSet(entriesBio, "Bio").apply { color = WASTE_COLORS[0]; valueTextColor = Color.BLACK; valueTextSize = 10f }
+        val set2 = BarDataSet(entriesNonBio, "Non-Bio").apply { color = WASTE_COLORS[1]; valueTextColor = Color.BLACK; valueTextSize = 10f }
+        val set3 = BarDataSet(entriesOthers, "Others").apply { color = WASTE_COLORS[2]; valueTextColor = Color.BLACK; valueTextSize = 10f }
+
+        val data = BarData(set1, set2, set3)
+
+        val groupSpace = 0.08f
+        val barSpace = 0.03f
+        val barWidth = 0.25f
+
+        data.barWidth = barWidth
+        chart.data = data
+
+        chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        chart.xAxis.axisMinimum = 0f
+        chart.xAxis.axisMaximum = 0f + chart.barData.getGroupWidth(groupSpace, barSpace) * labels.size
+
+        chart.groupBars(0f, groupSpace, barSpace)
+        chart.setFitBars(true)
+        chart.notifyDataSetChanged()
+        chart.invalidate()
     }
 
-    private fun setupMonthlyReports(year: String) {
-        val recyclerView: RecyclerView = requireView().findViewById(R.id.monthly_reports_recycler)
-        val reportsRef = FirebaseDatabase.getInstance(dbUrl).getReference("reports")
+    private fun exportChartToPdf(chart: BarChart) {
+        val bitmap = chart.chartBitmap
+        val pdfDocument = PdfDocument()
+        
+        // PDF page size (A4 is roughly 595x842 points)
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width + 40, bitmap.height + 100, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+        val canvas: Canvas = page.canvas
 
-        reportsRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
-            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-                val months = listOf("January", "February", "March", "April", "May", "June",
-                    "July", "August", "September", "October", "November", "December")
+        val paint = Paint()
+        paint.color = Color.BLACK
+        paint.textSize = 20f
+        paint.isFakeBoldText = true
 
-                val monthlyData = months.mapIndexed { index, name ->
-                    val monthNum = String.format("%02d", index + 1)
-                    var overflowCount = 0
+        // Draw Title
+        canvas.drawText("Waste Analytics Report", 20f, 40f, paint)
+        
+        // Draw Timestamp
+        paint.textSize = 12f
+        paint.isFakeBoldText = false
+        val timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        canvas.drawText("Generated on: $timeStamp", 20f, 65f, paint)
 
-                    for (dateSnapshot in snapshot.children) {
-                        val dateKey = dateSnapshot.key ?: ""
-                        if (dateKey.startsWith("$year-$monthNum")) {
-                            var dayHadOverflow = false
-                            for (report in dateSnapshot.children) {
-                                val level = report.child("fillLevel").getValue(Int::class.java) ?: 0
-                                if (level >= 90) dayHadOverflow = true
-                            }
-                            if (dayHadOverflow) overflowCount++
-                        }
-                    }
-                    MonthlyReport(name, year, overflowCount)
+        // Draw Chart Bitmap
+        canvas.drawBitmap(bitmap, 20f, 80f, null)
+
+        pdfDocument.finishPage(page)
+
+        val fileName = "WasteReport_${System.currentTimeMillis()}.pdf"
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = requireContext().contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 }
-
-                recyclerView.layoutManager = LinearLayoutManager(context)
-                recyclerView.adapter = MonthlyReportAdapter(monthlyData)
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                uri?.let {
+                    val outputStream: OutputStream? = resolver.openOutputStream(it)
+                    outputStream?.use { os ->
+                        pdfDocument.writeTo(os)
+                    }
+                    Toast.makeText(requireContext(), "PDF saved to Downloads", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                // For older versions, would need storage permissions
+                Toast.makeText(requireContext(), "Export failed: Version not supported", Toast.LENGTH_SHORT).show()
             }
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {}
-        })
+        } catch (e: Exception) {
+            Log.e("PDF_EXPORT", "Error: ${e.message}")
+            Toast.makeText(requireContext(), "Error exporting PDF", Toast.LENGTH_SHORT).show()
+        } finally {
+            pdfDocument.close()
+        }
     }
 }

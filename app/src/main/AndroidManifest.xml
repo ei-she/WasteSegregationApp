@@ -12,10 +12,11 @@
         android:roundIcon="@mipmap/last_updicon"
         android:supportsRtl="true"
         android:theme="@style/Theme.WasteSegregationApp"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_config">
 
         <service
-            android:name=".BinMonitoringService"
+            android:name=".BinMonitor"
             android:enabled="true"
             android:exported="false" />
         <activity
